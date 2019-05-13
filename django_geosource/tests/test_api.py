@@ -1,9 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 from rest_framework.test import APIClient
-from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
-
-from django.contrib.auth import get_user_model
 
 from django_geosource.models import PostGISSourceModel, SourceModel
 
@@ -43,4 +42,3 @@ class ModelSourceViewsetTestCase(TestCase):
         )
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertDictEqual(response.json(), source_example)
-

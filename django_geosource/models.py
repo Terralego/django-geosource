@@ -1,6 +1,7 @@
-from django.db import models
 from django.core.validators import RegexValidator, URLValidator
+from django.db import models
 from polymorphic.models import PolymorphicModel
+
 
 class SourceModel(PolymorphicModel):
     @property
