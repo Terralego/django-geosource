@@ -8,17 +8,24 @@ class PolymorphicModelSerializer(ModelSerializer):
     type_field = '_type'
     type_class_map = {}
 
-    def __new__(cls, data, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         ''' Return the correct serializer depending of the type provided in the type_field
         '''
 
-        if cls.type_field in data:
-            serializer = cls.get_serializer_from_type(data[cls.type_field])
+        if kwargs.pop('many', False):
+            return cls.many_init(*args, **kwargs)
+
+
+        if 'data' in kwargs:
+
+            data_type = kwargs['data'].get(cls.type_field)
+
+            serializer = cls.get_serializer_from_type(data_type)
 
             if serializer is not cls:
-                return serializer(data, *args, **kwargs)
+                return serializer(*args, **kwargs)
 
-        return super().__new__(cls, data, *args, **kwargs)
+        return super().__new__(cls, *args, **kwargs)
 
     def __init_subclass__(cls, **kwargs):
         ''' Create a registry of all subclasses of the current class
@@ -34,11 +41,16 @@ class PolymorphicModelSerializer(ModelSerializer):
         raise ValidationError({cls.type_field: f"{data_type}'s type is unknown'"} )
 
     def to_representation(self, obj):
-        data = {
-            k: v
-            for k, v in super().to_representation(obj).items()
-            if k not in obj.polymorphic_internal_model_fields
-        }
+        serializer = self.get_serializer_from_type(obj.__class__.__name__)
+
+        if serializer is self.__class__:
+            data = {
+                k: v
+                for k, v in super().to_representation(obj).items()
+                if k not in obj.polymorphic_internal_model_fields
+            }
+        else:
+            data = serializer().to_representation(obj)
 
         data[self.type_field] = obj.__class__.__name__
 
