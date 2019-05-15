@@ -1,7 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework.serializers import ModelSerializer, ValidationError
 
-from .models import GeoJSONSourceModel, PostGISSourceModel, SourceModel
+from .models import GeoJSONSourceModel, PostGISSourceModel, SourceModel, FieldModel
 
 
 class PolymorphicModelSerializer(ModelSerializer):
@@ -77,8 +77,15 @@ class PolymorphicModelSerializer(ModelSerializer):
         else:
             return serializer.create(validated_data)
 
+class FieldSerializer(ModelSerializer):
+
+    class Meta:
+        model = FieldModel
+        exclude = ('source', )
+
 
 class SourceModelSerializer(PolymorphicModelSerializer):
+    fields = FieldSerializer(many=True)
 
     class Meta:
         fields = '__all__'
