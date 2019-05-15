@@ -1,8 +1,9 @@
-from enum import Enum, auto
+from enum import Enum, IntEnum, auto
 from django.core.validators import RegexValidator, URLValidator
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from polymorphic.models import PolymorphicModel
+
 
 class FieldTypes(Enum):
     String = auto()
@@ -12,6 +13,21 @@ class FieldTypes(Enum):
 
     def _generate_next_value_(name, start, count, last_values):
         return name.lower()
+
+
+class GeometryTypes(IntEnum):
+    Point = 0
+    LineString = 1
+    # LinearRing 2
+    Polygon = 3
+    MultiPoint = 4
+    MultiLineString = 5
+    MultiPolygon = 6
+    GeometryCollection = 7
+
+    @classmethod
+    def choices(cls):
+        return [(geom_type, geom_type.value) for geom_type in cls]
 
 
 class SourceModel(PolymorphicModel):
@@ -46,6 +62,7 @@ class PostGISSourceModel(SourceModel):
 
     query = models.TextField()
     geom_field = models.CharField(max_length=255)
+    geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
     refresh = models.IntegerField()
 
