@@ -14,6 +14,10 @@ class FieldTypes(Enum):
     def _generate_next_value_(name, start, count, last_values):
         return name.lower()
 
+    @classmethod
+    def choices(cls):
+        return [(enum.value, enum) for enum in cls]
+
 
 class GeometryTypes(IntEnum):
     Point = 0
@@ -27,7 +31,7 @@ class GeometryTypes(IntEnum):
 
     @classmethod
     def choices(cls):
-        return [(geom_type, geom_type.value) for geom_type in cls]
+        return [(enum.value, enum) for enum in cls]
 
 
 class SourceModel(PolymorphicModel):
@@ -43,10 +47,13 @@ class SourceModel(PolymorphicModel):
 
 class FieldModel(models.Model):
     source = models.ForeignKey(SourceModel, related_name='fields', on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=False)
     label = models.CharField(max_length=255)
-    data_type = models.CharField(max_length=255, choices=[(tag, tag.value) for tag in FieldTypes])
+    data_type = models.CharField(max_length=255, choices=FieldTypes.choices())
     sample = JSONField(default=[])
+
+    class Meta:
+        unique_together = ['source', 'name']
 
 
 class PostGISSourceModel(SourceModel):

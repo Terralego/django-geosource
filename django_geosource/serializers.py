@@ -82,14 +82,38 @@ class FieldSerializer(ModelSerializer):
     class Meta:
         model = FieldModel
         exclude = ('source', )
+        read_only_fields = ('name', 'sample', 'source', )
 
 
 class SourceModelSerializer(PolymorphicModelSerializer):
-    fields = FieldSerializer(many=True)
+    fields = FieldSerializer(many=True, required=False)
 
     class Meta:
         fields = '__all__'
+        read_only_fields = ('status', )
         model = SourceModel
+
+    def update(self, instance, validated_data):
+        fields = validated_data.pop('fields')
+        source = super().update(instance, validated_data)
+
+        for field_data in self.get_initial().get('fields', []):
+            instance = source.fields.get(name=field_data.get('name'))
+
+            serializer = FieldSerializer(instance=instance, data=field_data)
+            if serializer.is_valid():
+                serializer.save()
+        return source
+
+
+    def create(self, validated_data):
+
+        # Fields can't be defined at source creation
+        validated_data.pop('fields', None)
+        source = super().create(validated_data)
+
+        return source
+
 
 
 class PostGISSourceModelSerializer(SourceModelSerializer):
