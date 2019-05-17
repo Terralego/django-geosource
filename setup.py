@@ -30,6 +30,6 @@ setup(
         "Django>=2.0,<2.1.0",
         "djangorestframework>=3.7,<3.8",
         "django-polymorphic>=2.0,<2.1",
-        # "celery>=4.3,<4.4",
+        "celery>=4.3,<4.4",
     ],
 )
