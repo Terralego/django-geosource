@@ -6,12 +6,13 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from polymorphic.models import PolymorphicModel
 import psycopg2
+from psycopg2 import sql
 from .callbacks import get_attr_from_path
-from .mixins import AsyncMethodsMixin
+from .mixins import CeleryCallMethodsMixin
 
 logger = logging.getLogger(__name__)
 
-
+# Decimal fields must be returned as float
 DEC2FLOAT = psycopg2.extensions.new_type(
     psycopg2.extensions.DECIMAL.values,
     'DEC2FLOAT',
@@ -24,6 +25,7 @@ class FieldTypes(Enum):
     Integer = auto()
     Float = auto()
     Boolean = auto()
+    Undefined = auto()
 
     def _generate_next_value_(name, start, count, last_values):
         return name.lower()
@@ -31,6 +33,18 @@ class FieldTypes(Enum):
     @classmethod
     def choices(cls):
         return [(enum.value, enum) for enum in cls]
+
+    @classmethod
+    def get_type_from_data(cls, data):
+        types = {
+            type(None): cls.Undefined,
+            str: cls.String,
+            int: cls.Integer,
+            bool: cls.Boolean,
+            float: cls.Float,
+        }
+
+        return types[type(data)]
 
 
 class GeometryTypes(IntEnum):
@@ -48,7 +62,7 @@ class GeometryTypes(IntEnum):
         return [(enum.value, enum) for enum in cls]
 
 
-class SourceModel(PolymorphicModel, AsyncMethodsMixin):
+class SourceModel(PolymorphicModel, CeleryCallMethodsMixin):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
 
@@ -65,10 +79,6 @@ class SourceModel(PolymorphicModel, AsyncMethodsMixin):
 
     def update_fields(self):
         raise NotImplementedError
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.run_async_method('update_fields')
 
     @property
     def type(self):
@@ -116,7 +126,41 @@ class PostGISSourceModel(SourceModel):
         return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     def update_fields(self):
-        pass
+        try:
+            cursor = self._db_connection
+            cursor.execute(
+                sql.SQL("SELECT * FROM ({}) q LIMIT 50").format(sql.SQL(self.query))
+            )
+
+            fields = {}
+
+            for record in cursor.fetchall():
+                for field_name, value in record.items():
+                    is_new = False
+
+                    if field_name not in fields:
+                        field, is_new = self.fields.get_or_create(name=field_name, defaults={'label': field_name, })
+                        field.sample = []
+                        fields[field_name] = field
+
+                    fields[field_name].sample.append(value)
+
+                    if is_new or fields[field_name].data_type == FieldTypes.Undefined:
+                        fields[field_name].data_type = FieldTypes.get_type_from_data(value)
+
+
+            for field in fields.values():
+                field.save()
+
+            # Delete fields that are not anymore present
+            self.fields.exclude(name__in=fields.keys()).delete()
+
+        except Exception as e:
+            logger.error(f"An error occured during fields discovery : {e}")
+            return False
+
+        return True
+
 
     def refresh_data(self):
         try:
@@ -124,7 +168,7 @@ class PostGISSourceModel(SourceModel):
 
             cursor = self._db_connection
             cursor.execute(self.query)
-            logger.debug(self.query)
+
             for row in cursor.fetchall():
                 geometry = row.pop(self.geom_field)
 

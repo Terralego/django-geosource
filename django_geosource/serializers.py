@@ -93,6 +93,14 @@ class SourceModelSerializer(PolymorphicModelSerializer):
         read_only_fields = ('status', )
         model = SourceModel
 
+    def create(self, validated_data):
+        # Fields can't be defined at source creation
+        validated_data.pop('fields', None)
+        source = super().create(validated_data)
+        if source.run_sync_method('update_fields').result:
+            return source
+        raise ValidationError('Fields initialization failed')
+
     def update(self, instance, validated_data):
         fields = validated_data.pop('fields')
         source = super().update(instance, validated_data)
@@ -103,17 +111,10 @@ class SourceModelSerializer(PolymorphicModelSerializer):
             serializer = FieldSerializer(instance=instance, data=field_data)
             if serializer.is_valid():
                 serializer.save()
-        return source
-
-
-    def create(self, validated_data):
-
-        # Fields can't be defined at source creation
-        validated_data.pop('fields', None)
-        source = super().create(validated_data)
+                if not source.run_sync_method('update_fields').result:
+                    raise ValidationError('Fields update failed')
 
         return source
-
 
 
 class PostGISSourceModelSerializer(SourceModelSerializer):
@@ -125,4 +126,5 @@ class PostGISSourceModelSerializer(SourceModelSerializer):
 class GeoJSONSourceModelSerializer(SourceModelSerializer):
     class Meta:
         model = GeoJSONSourceModel
+        read_only_fields = ('file', )
         fields = '__all__'
