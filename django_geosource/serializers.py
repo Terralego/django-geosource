@@ -126,5 +126,7 @@ class PostGISSourceModelSerializer(SourceModelSerializer):
 class GeoJSONSourceModelSerializer(SourceModelSerializer):
     class Meta:
         model = GeoJSONSourceModel
-        read_only_fields = ('file', )
+        extra_kwargs = {
+            'file': {'write_only': True}
+        }
         fields = '__all__'
