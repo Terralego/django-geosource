@@ -162,7 +162,7 @@ class PostGISSourceModel(SourceModel):
             RegexValidator(regex=r'(?:' + URLValidator.ipv4_re + '|' + URLValidator.ipv6_re + '|' + URLValidator.host_re + ')')
         ]
     )
-    db_port = models.IntegerField()
+    db_port = models.IntegerField(default=5432)
     db_username = models.CharField(max_length=63)
     db_password = models.CharField(max_length=255)
     db_name = models.CharField(max_length=63)
