@@ -65,6 +65,7 @@ class GeometryTypes(IntEnum):
 class SourceModel(PolymorphicModel, CeleryCallMethodsMixin):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
     status = models.NullBooleanField(default=None)
 
@@ -112,7 +113,6 @@ class PostGISSourceModel(SourceModel):
 
     id_field = models.CharField(max_length=255, default='id')
     geom_field = models.CharField(max_length=255)
-    geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
     refresh = models.IntegerField()
 
