@@ -1,9 +1,11 @@
 import logging
+import json
 from enum import Enum, IntEnum, auto
 from django.conf import settings
 from django.core.validators import RegexValidator, URLValidator
-from django.db import models
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import JSONField
+from django.db import models
 from polymorphic.models import PolymorphicModel
 import psycopg2
 from psycopg2 import sql
@@ -63,22 +65,78 @@ class GeometryTypes(IntEnum):
 
 
 class SourceModel(PolymorphicModel, CeleryCallMethodsMixin):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
+
+    id_field = models.CharField(max_length=255, default='id')
     geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
     status = models.NullBooleanField(default=None)
 
+    SOURCE_GEOM_ATTRIBUTE = '_geom_'
+
     def get_layer(self):
         return get_attr_from_path(settings.GEOSOURCE_LAYER_CALLBACK)(self)
 
-    def update_feature(self, layer, geometry, attributes):
-        return get_attr_from_path(settings.GEOSOURCE_FEATURE_CALLBACK)(self, layer, geometry, attributes)
+    def update_feature(self, *args):
+        return get_attr_from_path(settings.GEOSOURCE_FEATURE_CALLBACK)(self, *args)
 
     def refresh_data(self):
-        raise NotImplementedError
+        try:
+            layer = self.get_layer()
+
+            for row in self._get_records():
+                geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
+                identifier = row.pop(self.id_field)
+                try:
+
+                    self.update_feature(layer, identifier, geometry, row)
+                except Exception as e:
+                    logger.error(f"An error occured during feature update: {e}")
+
+            self.status = True
+        except Exception as e:
+            logger.error(f"An error occured during import : {e}")
+            self.status = False
+        finally:
+            self.save()
 
     def update_fields(self):
+        try:
+            records = self._get_records(50)
+
+            fields = {}
+
+            for record in records:
+                record.pop(self.SOURCE_GEOM_ATTRIBUTE)
+
+                for field_name, value in record.items():
+                    is_new = False
+
+                    if field_name not in fields:
+                        field, is_new = self.fields.get_or_create(name=field_name, defaults={'label': field_name, })
+                        field.sample = []
+                        fields[field_name] = field
+
+                    fields[field_name].sample.append(value)
+
+                    if is_new or fields[field_name].data_type == FieldTypes.Undefined:
+                        fields[field_name].data_type = FieldTypes.get_type_from_data(value)
+
+
+            for field in fields.values():
+                field.save()
+
+            # Delete fields that are not anymore present
+            self.fields.exclude(name__in=fields.keys()).delete()
+
+        except Exception as e:
+            logger.error(f"An error occured during fields discovery : {e}")
+            return False
+
+        return True
+
+    def _get_records(self, limit=None):
         raise NotImplementedError
 
     @property
@@ -111,10 +169,13 @@ class PostGISSourceModel(SourceModel):
 
     query = models.TextField()
 
-    id_field = models.CharField(max_length=255, default='id')
     geom_field = models.CharField(max_length=255)
 
     refresh = models.IntegerField()
+
+    @property
+    def SOURCE_GEOM_ATTRIBUTE(self):
+        return self.geom_field
 
     @property
     def _db_connection(self):
@@ -125,64 +186,41 @@ class PostGISSourceModel(SourceModel):
                                 dbname=self.db_name)
         return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    def update_fields(self):
-        try:
-            cursor = self._db_connection
-            cursor.execute(
-                sql.SQL("SELECT * FROM ({}) q LIMIT 50").format(sql.SQL(self.query))
-            )
+    def _get_records(self, limit=None):
+        cursor = self._db_connection
 
-            fields = {}
+        query = "SELECT * FROM ({}) q "
+        attrs = [sql.SQL(self.query), ]
+        if limit:
+            query += "LIMIT {}"
+            attrs.append(sql.Literal(limit))
 
-            for record in cursor.fetchall():
-                for field_name, value in record.items():
-                    is_new = False
+        cursor.execute(
+            sql.SQL(query).format(*attrs)
+        )
 
-                    if field_name not in fields:
-                        field, is_new = self.fields.get_or_create(name=field_name, defaults={'label': field_name, })
-                        field.sample = []
-                        fields[field_name] = field
+        return cursor.fetchall()
 
-                    fields[field_name].sample.append(value)
-
-                    if is_new or fields[field_name].data_type == FieldTypes.Undefined:
-                        fields[field_name].data_type = FieldTypes.get_type_from_data(value)
-
-
-            for field in fields.values():
-                field.save()
-
-            # Delete fields that are not anymore present
-            self.fields.exclude(name__in=fields.keys()).delete()
-
-        except Exception as e:
-            logger.error(f"An error occured during fields discovery : {e}")
-            return False
-
-        return True
-
-
-    def refresh_data(self):
-        try:
-            layer = self.get_layer()
-
-            cursor = self._db_connection
-            cursor.execute(self.query)
-
-            for row in cursor.fetchall():
-                geometry = row.pop(self.geom_field)
-
-                try:
-                    self.update_feature(layer, geometry, row)
-                except Exception as e:
-                    logger.error(f"An error occured during feature update: {e}")
-
-            self.status = True
-        except Exception as e:
-            logger.error(f"An error occured during import : {e}")
-            self.status = False
-        finally:
-            self.save()
 
 class GeoJSONSourceModel(SourceModel):
     file = models.FileField(upload_to='geosource/')
+
+    def get_file_as_dict(self):
+        try:
+            return json.load(self.file)
+        except json.JSONDecodeError:
+            logger.info("Source's GeoJSON file is not valid")
+            raise
+
+    def _get_records(self, limit=None):
+        geojson = self.get_file_as_dict()
+
+        limit = limit if limit else len(geojson['features'])
+
+        return [
+            {
+                self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(json.dumps(r['geometry'])),
+                **r['properties']
+            }
+            for r in geojson['features'][:limit]
+        ]

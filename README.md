@@ -28,7 +28,6 @@ def layer_callback(geosource):
 This one, define a feature creation callback method.
 Example:
 ```python
-def feature_callback(geosource, layer, geometry, attributes):
-    identifier = attributes.pop(geosource.id_field)
+def feature_callback(geosource, layer, identifier, geometry, attributes):
     return Feature.objects.get_or_create(layer=layer, identifier=identifier, geom=geometry, properties=attributes)[0]
 ```
