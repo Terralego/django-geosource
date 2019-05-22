@@ -3,14 +3,14 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import SourceModel
-from .serializers import SourceModelSerializer
+from .models import Source
+from .serializers import SourceSerializer
 
 
 
 class SourceModelViewset(ModelViewSet):
-    model = SourceModel
-    serializer_class = SourceModelSerializer
+    model = Source
+    serializer_class = SourceSerializer
     authentication_classes = ()
 
     def get_queryset(self):

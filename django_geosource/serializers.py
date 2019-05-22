@@ -1,7 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework.serializers import ModelSerializer, ValidationError
 
-from .models import GeoJSONSourceModel, PostGISSourceModel, SourceModel, FieldModel
+from .models import GeoJSONSource, PostGISSource, Source, Field
 
 
 class PolymorphicModelSerializer(ModelSerializer):
@@ -77,21 +77,22 @@ class PolymorphicModelSerializer(ModelSerializer):
         else:
             return serializer.create(validated_data)
 
+
 class FieldSerializer(ModelSerializer):
 
     class Meta:
-        model = FieldModel
+        model = Field
         exclude = ('source', )
         read_only_fields = ('name', 'sample', 'source', )
 
 
-class SourceModelSerializer(PolymorphicModelSerializer):
+class SourceSerializer(PolymorphicModelSerializer):
     fields = FieldSerializer(many=True, required=False)
 
     class Meta:
         fields = '__all__'
         read_only_fields = ('status', )
-        model = SourceModel
+        model = Source
 
     def create(self, validated_data):
         # Fields can't be defined at source creation
@@ -117,15 +118,15 @@ class SourceModelSerializer(PolymorphicModelSerializer):
         return source
 
 
-class PostGISSourceModelSerializer(SourceModelSerializer):
+class PostGISSourceSerializer(SourceSerializer):
     class Meta:
-        model = PostGISSourceModel
+        model = PostGISSource
         exclude = ('db_password', )
 
 
-class GeoJSONSourceModelSerializer(SourceModelSerializer):
+class GeoJSONSourceSerializer(SourceSerializer):
     class Meta:
-        model = GeoJSONSourceModel
+        model = GeoJSONSource
         extra_kwargs = {
             'file': {'write_only': True}
         }

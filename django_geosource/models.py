@@ -64,7 +64,7 @@ class GeometryTypes(IntEnum):
         return [(enum.value, enum) for enum in cls]
 
 
-class SourceModel(PolymorphicModel, CeleryCallMethodsMixin):
+class Source(PolymorphicModel, CeleryCallMethodsMixin):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
@@ -144,8 +144,8 @@ class SourceModel(PolymorphicModel, CeleryCallMethodsMixin):
         return self.__class__
 
 
-class FieldModel(models.Model):
-    source = models.ForeignKey(SourceModel, related_name='fields', on_delete=models.CASCADE)
+class Field(models.Model):
+    source = models.ForeignKey(Source, related_name='fields', on_delete=models.CASCADE)
     name = models.CharField(max_length=255, blank=False)
     label = models.CharField(max_length=255)
     data_type = models.CharField(max_length=255, choices=FieldTypes.choices())
@@ -155,7 +155,7 @@ class FieldModel(models.Model):
         unique_together = ['source', 'name']
 
 
-class PostGISSourceModel(SourceModel):
+class PostGISSource(Source):
     db_host = models.CharField(
         max_length=255,
         validators=[
@@ -202,7 +202,7 @@ class PostGISSourceModel(SourceModel):
         return cursor.fetchall()
 
 
-class GeoJSONSourceModel(SourceModel):
+class GeoJSONSource(Source):
     file = models.FileField(upload_to='geosource/')
 
     def get_file_as_dict(self):
