@@ -1,10 +1,12 @@
+from unittest.mock import MagicMock, patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 from rest_framework.test import APIClient
 
-from django_geosource.models import PostGISSourceModel, SourceModel, FieldModel, FieldTypes, GeometryTypes
+from django_geosource.models import PostGISSource, Source, Field, FieldTypes, GeometryTypes
 
 UserModel = get_user_model()
 
@@ -12,26 +14,27 @@ UserModel = get_user_model()
 class ModelSourceViewsetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.default_user = UserModel.objects.get_or_create(**{UserModel.USERNAME_FIELD:'testuser'})[0]
+        self.default_user = UserModel.objects.get_or_create(is_superuser=True, **{UserModel.USERNAME_FIELD:'testuser'})[0]
         self.client.force_authenticate(self.default_user)
 
     def test_list_view(self):
         # Create many sources and list them
         [
-            PostGISSourceModel.objects.create(refresh=-1, geom_type=GeometryTypes.LineString.value)
+            PostGISSource.objects.create(name=f"test-{x}", refresh=-1, geom_type=GeometryTypes.LineString.value)
             for x in range(5)
         ]
 
         response = self.client.get(reverse('geosource:geosource-list'))
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
-            SourceModel.objects.count(),
+            Source.objects.count(),
             len(response.json()['results'])
         )
 
+    @patch('django_geosource.models.Source.update_fields', MagicMock(return_value=True))
     def test_postgis_source_creation(self):
         source_example = {
-            '_type': 'PostGISSourceModel',
+            '_type': 'PostGISSource',
             'name': 'Test Source',
             'db_username': 'username',
             'db_name': 'dbname',
@@ -51,8 +54,9 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertDictContainsSubset(source_example , response.json())
 
+    @patch('django_geosource.models.Source.update_fields', MagicMock(return_value=True))
     def test_update_fields(self):
-        source = PostGISSourceModel.objects.create(
+        source = PostGISSource.objects.create(
             name='Test Update Source',
             db_host='localhost',
             db_name='dbname',
@@ -62,7 +66,7 @@ class ModelSourceViewsetTestCase(TestCase):
             refresh=-1,
             geom_type=GeometryTypes.LineString.value,
             )
-        field = FieldModel.objects.create(
+        field = Field.objects.create(
             source=source,
             name='field_name',
             label='Label',

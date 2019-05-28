@@ -4,14 +4,14 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Source
+from .permissions import SourcePermission
 from .serializers import SourceSerializer
-
 
 
 class SourceModelViewset(ModelViewSet):
     model = Source
     serializer_class = SourceSerializer
-    authentication_classes = ()
+    permission_classes = (SourcePermission, )
 
     def get_queryset(self):
         return self.model.objects.all()
