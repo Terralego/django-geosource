@@ -1,5 +1,7 @@
+from os.path import basename
+
 from django.core.exceptions import ImproperlyConfigured
-from rest_framework.serializers import ModelSerializer, ValidationError
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
 
 from .models import GeoJSONSource, PostGISSource, Source, Field
 
@@ -125,6 +127,12 @@ class PostGISSourceSerializer(SourceSerializer):
 
 
 class GeoJSONSourceSerializer(SourceSerializer):
+    filename = SerializerMethodField()
+
+    def get_filename(self, instance):
+        if instance.file:
+            return basename(instance.file.path)
+
     class Meta:
         model = GeoJSONSource
         extra_kwargs = {
