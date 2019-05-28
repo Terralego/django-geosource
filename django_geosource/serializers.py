@@ -121,9 +121,13 @@ class SourceSerializer(PolymorphicModelSerializer):
 
 
 class PostGISSourceSerializer(SourceSerializer):
+
     class Meta:
         model = PostGISSource
-        exclude = ('db_password', )
+        fields = '__all__'
+        extra_kwargs = {
+            'db_password': {'write_only': True}
+        }
 
 
 class GeoJSONSourceSerializer(SourceSerializer):
