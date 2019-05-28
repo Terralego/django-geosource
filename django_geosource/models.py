@@ -139,6 +139,9 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     def _get_records(self, limit=None):
         raise NotImplementedError
 
+    def __str__(self):
+        return f'{self.name} - {self.__class__.__name__}'
+
     @property
     def type(self):
         return self.__class__
@@ -150,6 +153,9 @@ class Field(models.Model):
     label = models.CharField(max_length=255)
     data_type = models.CharField(max_length=255, choices=FieldTypes.choices())
     sample = JSONField(default=[])
+
+    def __str__(self):
+        return f'{self.name} ({self.source.name} - {self.data_type})'
 
     class Meta:
         unique_together = ['source', 'name']
@@ -171,7 +177,7 @@ class PostGISSource(Source):
 
     geom_field = models.CharField(max_length=255)
 
-    refresh = models.IntegerField()
+    refresh = models.IntegerField(default=-1)
 
     @property
     def SOURCE_GEOM_ATTRIBUTE(self):
