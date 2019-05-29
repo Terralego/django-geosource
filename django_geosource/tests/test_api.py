@@ -90,3 +90,12 @@ class ModelSourceViewsetTestCase(TestCase):
 
         field.refresh_from_db()
         self.assertEqual(field.label, test_field_label)
+
+    @patch('django_geosource.models.Source._get_records',
+           MagicMock(return_value=[{'a': 'b', 'c': 42, '_geom_': 'POINT(0 0)'}]))
+    def test_update_fields_method(self):
+        obj = Source.objects.create(geom_type=10)
+        obj.update_fields()
+
+        self.assertEqual(FieldTypes.String.value, obj.fields.get(name='a').data_type)
+        self.assertEqual(FieldTypes.Integer.value, obj.fields.get(name='c').data_type)

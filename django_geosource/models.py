@@ -126,8 +126,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
                     fields[field_name].sample.append(value)
 
                     if is_new or fields[field_name].data_type == FieldTypes.Undefined:
-                        fields[field_name].data_type = FieldTypes.get_type_from_data(value)
-
+                        fields[field_name].data_type = FieldTypes.get_type_from_data(value).value
 
             for field in fields.values():
                 field.save()
@@ -156,7 +155,7 @@ class Field(models.Model):
     source = models.ForeignKey(Source, related_name='fields', on_delete=models.CASCADE)
     name = models.CharField(max_length=255, blank=False)
     label = models.CharField(max_length=255)
-    data_type = models.CharField(max_length=255, choices=FieldTypes.choices())
+    data_type = models.IntegerField(choices=FieldTypes.choices(), default=FieldTypes.Undefined.value)
     sample = JSONField(default=[])
 
     def __str__(self):
