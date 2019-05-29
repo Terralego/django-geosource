@@ -74,6 +74,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     status = models.NullBooleanField(default=None)
 
     SOURCE_GEOM_ATTRIBUTE = '_geom_'
+    MAX_SAMPLE_DATA = 5
 
     class Meta:
         permissions = (
@@ -123,7 +124,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
                         field.sample = []
                         fields[field_name] = field
 
-                    fields[field_name].sample.append(value)
+                    if len(fields[field_name].sample) < self.MAX_SAMPLE_DATA and value is not None:
+                        fields[field_name].sample.append(value)
 
                     if is_new or fields[field_name].data_type == FieldTypes.Undefined:
                         fields[field_name].data_type = FieldTypes.get_type_from_data(value).value
