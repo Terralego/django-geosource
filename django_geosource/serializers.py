@@ -1,6 +1,7 @@
 from os.path import basename
 
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
 
 from .models import GeoJSONSource, PostGISSource, Source, Field
@@ -70,6 +71,7 @@ class PolymorphicModelSerializer(ModelSerializer):
 
         return validated_data
 
+    @transaction.atomic
     def create(self, validated_data):
         data_type = validated_data.pop(self.type_field, None)
         serializer = self.get_serializer_from_type(data_type)(validated_data)
@@ -96,6 +98,7 @@ class SourceSerializer(PolymorphicModelSerializer):
         read_only_fields = ('status', )
         model = Source
 
+    @transaction.atomic
     def create(self, validated_data):
         # Fields can't be defined at source creation
         validated_data.pop('fields', None)
@@ -104,6 +107,7 @@ class SourceSerializer(PolymorphicModelSerializer):
             return source
         raise ValidationError('Fields initialization failed')
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         fields = validated_data.pop('fields')
         source = super().update(instance, validated_data)
