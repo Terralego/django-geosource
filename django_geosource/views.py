@@ -22,7 +22,8 @@ class SourceModelViewset(ModelViewSet):
 
         refresh_job = source.run_async_method('refresh_data')
         if refresh_job:
-            source.update(status=refresh_job.task_id)
+            source.status = refresh_job.task_id
+            source.save()
 
             return Response(status=status.HTTP_202_ACCEPTED)
 
