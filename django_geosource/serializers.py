@@ -116,14 +116,15 @@ class SourceSerializer(PolymorphicModelSerializer):
         fields = validated_data.pop('fields')
         source = super().update(instance, validated_data)
 
+        if not source.run_sync_method('update_fields').result:
+            raise ValidationError('Fields update failed')
+
         for field_data in self.get_initial().get('fields', []):
             instance = source.fields.get(name=field_data.get('name'))
 
             serializer = FieldSerializer(instance=instance, data=field_data)
             if serializer.is_valid():
                 serializer.save()
-                if not source.run_sync_method('update_fields').result:
-                    raise ValidationError('Fields update failed')
 
         return source
 
