@@ -125,6 +125,8 @@ class SourceSerializer(PolymorphicModelSerializer):
             serializer = FieldSerializer(instance=instance, data=field_data)
             if serializer.is_valid():
                 serializer.save()
+            else:
+                raise ValidationError('Field configuration is not valid')
 
         return source
 
