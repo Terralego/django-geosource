@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.validators import RegexValidator, URLValidator
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import JSONField
-from django.db import models
+from django.db import models, transaction
 from polymorphic.models import PolymorphicModel
 import psycopg2
 from psycopg2 import sql
@@ -71,7 +71,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     id_field = models.CharField(max_length=255, default='id')
     geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
-    status = models.NullBooleanField(default=None)
+    status = models.CharField(null=True, max_length=255)
 
     SOURCE_GEOM_ATTRIBUTE = '_geom_'
     MAX_SAMPLE_DATA = 5
@@ -87,60 +87,54 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     def update_feature(self, *args):
         return get_attr_from_path(settings.GEOSOURCE_FEATURE_CALLBACK)(self, *args)
 
+    @transaction.atomic
     def refresh_data(self):
-        try:
-            layer = self.get_layer()
+        layer = self.get_layer()
+        row_count = 0
 
-            for row in self._get_records():
-                geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
-                identifier = row.pop(self.id_field)
-                try:
+        for row in self._get_records():
+            geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
+            identifier = row.pop(self.id_field)
+            self.update_feature(layer, identifier, geometry, row)
+            row_count += 1
 
-                    self.update_feature(layer, identifier, geometry, row)
-                except Exception as e:
-                    logger.error(f"An error occured during feature update: {e}")
+        return {
+            'count': row_count,
+        }
 
-            self.status = True
-        except Exception as e:
-            logger.error(f"An error occured during import : {e}")
-            self.status = False
-        finally:
-            self.save()
-
+    @transaction.atomic
     def update_fields(self):
-        try:
-            records = self._get_records(50)
+        records = self._get_records(50)
 
-            fields = {}
+        fields = {}
 
-            for record in records:
-                record.pop(self.SOURCE_GEOM_ATTRIBUTE)
+        for record in records:
+            record.pop(self.SOURCE_GEOM_ATTRIBUTE)
 
-                for field_name, value in record.items():
-                    is_new = False
+            for field_name, value in record.items():
+                is_new = False
 
-                    if field_name not in fields:
-                        field, is_new = self.fields.get_or_create(name=field_name, defaults={'label': field_name, })
-                        field.sample = []
-                        fields[field_name] = field
+                if field_name not in fields:
+                    field, is_new = self.fields.get_or_create(name=field_name, defaults={'label': field_name, })
+                    field.sample = []
+                    fields[field_name] = field
 
-                    if len(fields[field_name].sample) < self.MAX_SAMPLE_DATA and value is not None:
-                        fields[field_name].sample.append(value)
+                if len(fields[field_name].sample) < self.MAX_SAMPLE_DATA and value is not None:
+                    fields[field_name].sample.append(value)
 
-                    if is_new or fields[field_name].data_type == FieldTypes.Undefined:
-                        fields[field_name].data_type = FieldTypes.get_type_from_data(value).value
+                if is_new or fields[field_name].data_type == FieldTypes.Undefined:
+                    fields[field_name].data_type = FieldTypes.get_type_from_data(value).value
 
-            for field in fields.values():
-                field.save()
+        for field in fields.values():
+            field.save()
 
-            # Delete fields that are not anymore present
-            self.fields.exclude(name__in=fields.keys()).delete()
+        # Delete fields that are not anymore present
+        self.fields.exclude(name__in=fields.keys()).delete()
 
-        except Exception as e:
-            logger.error(f"An error occured during fields discovery : {e}")
-            return False
+        return {
+            'count': len(fields),
+        }
 
-        return True
 
     def _get_records(self, limit=None):
         raise NotImplementedError

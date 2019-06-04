@@ -20,6 +20,10 @@ class SourceModelViewset(ModelViewSet):
     def refresh(self, request, pk):
         source = self.get_object()
 
-        if source.run_async_method('refresh_data'):
+        refresh_job = source.run_async_method('refresh_data')
+        if refresh_job:
+            source.update(status=refresh_job.task_id)
+
             return Response(status=status.HTTP_202_ACCEPTED)
+
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

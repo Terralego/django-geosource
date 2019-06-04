@@ -1,21 +1,52 @@
 import logging
 
-from celery import shared_task
+from celery import shared_task, states
+from celery.exceptions import Ignore
 from django.apps import apps
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task()
-def run_model_object_method(app, model, pk, method):
+def set_failure_state(task, method, message):
+
+    # Failure messaging needs to be formed as expected by celery API
+    logger.warning(message)
+    task.update_state(
+        state=states.FAILURE,
+        meta={
+            'method': method,
+            'exc_type': Exception.__name__,
+            'exc_message': [message, ],
+        }
+    )
+
+
+@shared_task(bind=True)
+def run_model_object_method(self, app, model, pk, method):
+    self.update_state(state=states.STARTED)
+
     Model = apps.get_app_config(app).get_model(model)
+
     try:
         obj = Model.objects.get(pk=pk)
-        return getattr(obj, method)()
+        state = {
+            'action': method,
+            **getattr(obj, method)()
+        }
+
+        self.update_state(state=states.SUCCESS, meta=state)
+
     except Model.DoesNotExist:
-        logger.warning(f"{Model}'s object with pk {pk} doesn't exist")
+        set_failure_state(self, method, f"{Model}'s object with pk {pk} doesn't exist")
 
     except AttributeError:
-        logger.warning(f"{method} doesn't exist for object {obj}")
+        set_failure_state(self, method, f"{method} doesn't exist for object {obj}")
+
     except Exception as e:
-        logger.warning(f"An exception occured runing {method} on model {model}'s object with pk {pk}: {e}")
+        if hasattr(e, 'message'):
+            message = e.message
+        else:
+            message = f'{e}'
+        set_failure_state(self, method, message)
+
+    raise Ignore()
