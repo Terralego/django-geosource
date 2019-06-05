@@ -1,15 +1,18 @@
 from rest_framework.decorators import detail_route
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
 
 from .models import Source
+from .parsers import NestedMultipartJSONParser
 from .permissions import SourcePermission
 from .serializers import SourceSerializer
 
 
 class SourceModelViewset(ModelViewSet):
     model = Source
+    parser_classes = (JSONParser, NestedMultipartJSONParser)
     serializer_class = SourceSerializer
     permission_classes = (SourcePermission, )
 
