@@ -28,6 +28,9 @@ class SourceModelViewset(ModelViewSet):
             source.status = refresh_job.task_id
             source.save()
 
-            return Response(status=status.HTTP_202_ACCEPTED)
+            return Response(
+                        data=self.serializer_class().get_status(source),
+                        status=status.HTTP_202_ACCEPTED
+                    )
 
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
