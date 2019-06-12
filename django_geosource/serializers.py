@@ -65,7 +65,6 @@ class PolymorphicModelSerializer(ModelSerializer):
 
 
     def to_internal_value(self, data):
-
         data_type = data.get(self.type_field)
 
         validated_data = super().to_internal_value(data)
@@ -164,6 +163,12 @@ class PostGISSourceSerializer(SourceSerializer):
 
 class GeoJSONSourceSerializer(SourceSerializer):
     filename = SerializerMethodField()
+
+    def to_internal_value(self, data):
+        if len(data['file']) > 0:
+            data['file'] = data['file'][0]
+
+        return super().to_internal_value(data)
 
     def get_filename(self, instance):
         if instance.file:
