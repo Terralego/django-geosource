@@ -152,7 +152,7 @@ class Field(models.Model):
     name = models.CharField(max_length=255, blank=False)
     label = models.CharField(max_length=255)
     data_type = models.IntegerField(choices=FieldTypes.choices(), default=FieldTypes.Undefined.value)
-    sample = JSONField(default=[])
+    sample = JSONField(default=list)
 
     def __str__(self):
         return f'{self.name} ({self.source.name} - {self.data_type})'
