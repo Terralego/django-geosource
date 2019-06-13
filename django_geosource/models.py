@@ -100,7 +100,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
             self.update_feature(layer, identifier, geometry, row)
             row_count += 1
 
-        refresh_data_done.send(sender=self.__class__, layer=layer, )
+        refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
 
         return {
             'count': row_count,
