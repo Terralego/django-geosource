@@ -9,8 +9,10 @@ from django.db import models, transaction
 from polymorphic.models import PolymorphicModel
 import psycopg2
 from psycopg2 import sql
+
 from .callbacks import get_attr_from_path
 from .mixins import CeleryCallMethodsMixin
+from .signals import refresh_data_done
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +99,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
             identifier = row.pop(self.id_field)
             self.update_feature(layer, identifier, geometry, row)
             row_count += 1
+
+        refresh_data_done.send(sender=self.__class__, layer=layer, )
 
         return {
             'count': row_count,
