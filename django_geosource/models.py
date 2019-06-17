@@ -1,6 +1,7 @@
 import logging
 import json
 from enum import Enum, IntEnum, auto
+from celery.result import AsyncResult
 from django.conf import settings
 from django.core.validators import RegexValidator, URLValidator
 from django.contrib.gis.geos import GEOSGeometry
@@ -11,6 +12,7 @@ import psycopg2
 from psycopg2 import sql
 
 from .callbacks import get_attr_from_path
+from .celery import app as celery_app
 from .mixins import CeleryCallMethodsMixin
 from .signals import refresh_data_done
 
@@ -139,6 +141,23 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
             'count': len(fields),
         }
 
+    def get_status(self):
+        response = {}
+
+        if self.status:
+            task = AsyncResult(self.status, app=celery_app)
+            response = {
+                'state': task.state,
+                'done': task.date_done,
+            }
+
+            if task.successful():
+                response['result'] = task.result
+            if task.failed():
+                task_data = task.backend.get(task.backend.get_key_for_task(task.id))
+                response.update(json.loads(task_data).get('result', {}))
+
+        return response
 
     def _get_records(self, limit=None):
         raise NotImplementedError

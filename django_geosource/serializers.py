@@ -1,12 +1,10 @@
 import json
 from os.path import basename
 
-from celery.result import AsyncResult
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
 
-from .celery import app as celery_app
 from .models import GeoJSONSource, PostGISSource, Source, Field
 
 
@@ -133,22 +131,7 @@ class SourceSerializer(PolymorphicModelSerializer):
         return source
 
     def get_status(self, instance):
-        response = {}
-
-        if instance.status:
-            task = AsyncResult(instance.status, app=celery_app)
-            response = {
-                'state': task.state,
-                'done': task.date_done,
-            }
-
-            if task.successful():
-                response['result'] = task.result
-            if task.failed():
-                task_data = task.backend.get(task.backend.get_key_for_task(task.id))
-                response.update(json.loads(task_data).get('result', {}))
-
-        return response
+        return instance.get_status()
 
 
 class PostGISSourceSerializer(SourceSerializer):

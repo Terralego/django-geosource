@@ -29,7 +29,7 @@ class SourceModelViewset(ModelViewSet):
             source.save()
 
             return Response(
-                        data=self.serializer_class().get_status(source),
+                        data=source.get_status(),
                         status=status.HTTP_202_ACCEPTED
                     )
 
