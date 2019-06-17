@@ -95,6 +95,10 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     def clear_features(self, layer, begin_date):
         return get_attr_from_path(settings.GEOSOURCE_CLEAN_FEATURE_CALLBACK)(self, layer, begin_date)
 
+    def delete(self, *args, **kwargs):
+        get_attr_from_path(settings.GEOSOURCE_DELETE_LAYER_CALLBACK)(self)
+        return super().delete(*args, **kwargs)
+
     @transaction.atomic
     def refresh_data(self):
         layer = self.get_layer()

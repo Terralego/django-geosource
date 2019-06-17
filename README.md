@@ -41,3 +41,14 @@ Example:
 def clear_features(geosource, layer, begin_date):
     return layer.features.filter(updated_at__lt=begin_date).delete()
 ```
+
+### GEOSOURCE_DELETE_LAYER_CALLBACK
+This is called when a Source is deleted, so you are able to do what you want with the loaded content in database, when
+the source doesn't exist anymore. It's executed before real deletion.
+Example:
+```python
+def delete_layer(geosource, layer):
+    if layer.features.count() > 0:
+        layer.features.delete()
+    return layer.delete()
+```
