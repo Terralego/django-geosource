@@ -31,3 +31,13 @@ Example:
 def feature_callback(geosource, layer, identifier, geometry, attributes):
     return Feature.objects.get_or_create(layer=layer, identifier=identifier, geom=geometry, properties=attributes)[0]
 ```
+
+### GEOSOURCE_CLEAN_FEATURE_CALLBACK
+This callback is called when the refresh is done, to clear old features that are not anymore present in the database.
+It receives as parametter the geosource, layer and begin update date, so you can advise what to do depending of your
+models.
+Example:
+```python
+def clear_features(geosource, layer, begin_date):
+    return layer.features.filter(updated_at__lt=begin_date).delete()
+```
