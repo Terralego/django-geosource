@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import json
 from enum import Enum, IntEnum, auto
@@ -91,9 +92,13 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     def update_feature(self, *args):
         return get_attr_from_path(settings.GEOSOURCE_FEATURE_CALLBACK)(self, *args)
 
+    def clear_features(self, layer, begin_date):
+        return get_attr_from_path(settings.GEOSOURCE_CLEAN_FEATURE_CALLBACK)(self, layer, begin_date)
+
     @transaction.atomic
     def refresh_data(self):
         layer = self.get_layer()
+        begin_date = datetime.now()
         row_count = 0
 
         for row in self._get_records():
@@ -101,6 +106,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
             identifier = row.pop(self.id_field)
             self.update_feature(layer, identifier, geometry, row)
             row_count += 1
+
+        self.clear_features(layer, begin_date)
 
         refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
 
