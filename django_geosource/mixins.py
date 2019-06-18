@@ -7,7 +7,7 @@ class CeleryCallMethodsMixin:
 
     def update_status(self, task):
         self.status = task.task_id
-        task.save()
+        self.save()
 
     def run_async_method(self, method, force=False):
         if self.get_status().get('state') in ('SUCCESS', 'FAILURE', None) or force:
