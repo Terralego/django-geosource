@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
 
-from .models import GeoJSONSource, PostGISSource, Source, Field
+from .models import CommandSource, GeoJSONSource, PostGISSource, Source, Field
 
 
 class PolymorphicModelSerializer(ModelSerializer):
@@ -163,3 +163,15 @@ class GeoJSONSourceSerializer(SourceSerializer):
             'file': {'write_only': True}
         }
         fields = '__all__'
+
+
+class CommandSourceSerializer(SourceSerializer):
+
+    class Meta:
+        model = CommandSource
+        fields = '__all__'
+        extra_kwargs = {
+            'command': {
+                'read_only': True,
+                }
+        }

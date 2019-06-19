@@ -1,9 +1,12 @@
 from datetime import datetime
+from io import BytesIO
 import logging
 import json
+from os import sys
 from enum import Enum, IntEnum, auto
 from celery.result import AsyncResult
 from django.conf import settings
+from django.core.management import call_command
 from django.core.validators import RegexValidator, URLValidator
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import JSONField
@@ -264,3 +267,30 @@ class GeoJSONSource(Source):
             }
             for r in geojson['features'][:limit]
         ]
+
+
+class CommandSource(Source):
+    command = models.CharField(max_length=255)
+
+    @transaction.atomic
+    def refresh_data(self):
+        layer = self.get_layer()
+        begin_date = datetime.now()
+
+        sys.stdout.encoding = None
+        sys.stdout.buffer = BytesIO()
+        call_command(self.command)
+
+        self.clear_features(layer, begin_date)
+
+        refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
+
+        return {
+            'count': None,
+        }
+
+    @transaction.atomic
+    def update_fields(self):
+        return {
+            'count': None,
+        }
