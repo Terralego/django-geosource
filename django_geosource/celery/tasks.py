@@ -39,8 +39,8 @@ def run_model_object_method(self, app, model, pk, method):
     except Model.DoesNotExist:
         set_failure_state(self, method, f"{Model}'s object with pk {pk} doesn't exist")
 
-    except AttributeError:
-        set_failure_state(self, method, f"{method} doesn't exist for object {obj}")
+    except AttributeError as e:
+        set_failure_state(self, method, f"{method} doesn't exist for object {obj}: {e}")
 
     except Exception as e:
         if hasattr(e, 'message'):
