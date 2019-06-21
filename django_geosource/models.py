@@ -82,6 +82,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     id_field = models.CharField(max_length=255, default='id')
     geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
+    settings = JSONField(default=dict)
+
     status = models.CharField(null=True, max_length=255)
 
     SOURCE_GEOM_ATTRIBUTE = '_geom_'
