@@ -54,7 +54,10 @@ class FieldTypes(Enum):
             float: cls.Float,
         }
 
-        return types[type(data)]
+        try:
+            return types[type(data)]
+        except:
+            return cls.Undefined
 
 
 class GeometryTypes(IntEnum):
@@ -289,8 +292,5 @@ class CommandSource(Source):
             'count': None,
         }
 
-    @transaction.atomic
-    def update_fields(self):
-        return {
-            'count': None,
-        }
+    def _get_records(self, limit=None):
+        return []
