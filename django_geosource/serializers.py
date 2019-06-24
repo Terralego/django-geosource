@@ -148,7 +148,7 @@ class GeoJSONSourceSerializer(SourceSerializer):
     filename = SerializerMethodField()
 
     def to_internal_value(self, data):
-        if len(data['file']) > 0:
+        if len(data.get('file', [])) > 0:
             data['file'] = data['file'][0]
 
         return super().to_internal_value(data)
