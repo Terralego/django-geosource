@@ -115,7 +115,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
 
         for row in self._get_records():
             geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
-            identifier = row.pop(self.id_field)
+            identifier = row[self.id_field]
             self.update_feature(layer, identifier, geometry, row)
             row_count += 1
 
