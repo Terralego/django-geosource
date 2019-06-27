@@ -6,11 +6,12 @@ from os import sys
 from enum import Enum, IntEnum, auto
 from celery.result import AsyncResult
 from django.conf import settings
-from django.core.management import call_command
-from django.core.validators import RegexValidator, URLValidator
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import JSONField
+from django.core.management import call_command
+from django.core.validators import RegexValidator, URLValidator
 from django.db import models, transaction
+from django.utils.text import slugify
 from polymorphic.models import PolymorphicModel
 import psycopg2
 from psycopg2 import sql
@@ -77,6 +78,7 @@ class GeometryTypes(IntEnum):
 
 class Source(PolymorphicModel, CeleryCallMethodsMixin):
     name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
     id_field = models.CharField(max_length=255, default='id')
@@ -106,6 +108,10 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     def delete(self, *args, **kwargs):
         get_attr_from_path(settings.GEOSOURCE_DELETE_LAYER_CALLBACK)(self)
         return super().delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        return super().save(*args, **kwargs)
 
     @transaction.atomic
     def refresh_data(self):
