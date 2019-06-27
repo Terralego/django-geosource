@@ -119,14 +119,17 @@ class SourceSerializer(PolymorphicModelSerializer):
 
         for field_data in self.get_initial().get('fields', []):
 
-            instance = source.fields.get(name=field_data.get('name'))
+            try:
+                instance = source.fields.get(name=field_data.get('name'))
 
-            serializer = FieldSerializer(instance=instance, data=field_data)
+                serializer = FieldSerializer(instance=instance, data=field_data)
 
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                raise ValidationError('Field configuration is not valid')
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    raise ValidationError('Field configuration is not valid')
+            except Field.DoesNotExist:
+                pass
 
         return source
 
