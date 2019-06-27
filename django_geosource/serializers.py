@@ -3,7 +3,7 @@ from os.path import basename
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, SlugField, ValidationError
 
 from .models import CommandSource, GeoJSONSource, PostGISSource, Source, Field
 
@@ -93,10 +93,10 @@ class FieldSerializer(ModelSerializer):
 class SourceSerializer(PolymorphicModelSerializer):
     fields = FieldSerializer(many=True, required=False)
     status = SerializerMethodField()
+    slug = SlugField(max_length=255, read_only=True)
 
     class Meta:
         fields = '__all__'
-        read_only_fields = ('status', )
         model = Source
 
     @transaction.atomic
@@ -162,10 +162,10 @@ class GeoJSONSourceSerializer(SourceSerializer):
 
     class Meta:
         model = GeoJSONSource
+        fields = '__all__'
         extra_kwargs = {
             'file': {'write_only': True}
         }
-        fields = '__all__'
 
 
 class CommandSourceSerializer(SourceSerializer):
