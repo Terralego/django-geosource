@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, SlugField, ValidationError
 
-from .models import CommandSource, GeoJSONSource, PostGISSource, Source, Field
+from .models import CommandSource, GeoJSONSource, PostGISSource, Source, Field, WMTSSource
 
 
 class PolymorphicModelSerializer(ModelSerializer):
@@ -178,3 +178,10 @@ class CommandSourceSerializer(SourceSerializer):
                 'read_only': True,
                 }
         }
+
+
+class WMTSSourceSerialize(SourceSerializer):
+
+    class Meta:
+        model = WMTSSource
+        fields = '__all__'

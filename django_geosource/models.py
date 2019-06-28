@@ -18,6 +18,7 @@ from psycopg2 import sql
 
 from .callbacks import get_attr_from_path
 from .celery import app as celery_app
+from .fields import LongURLField
 from .mixins import CeleryCallMethodsMixin
 from .signals import refresh_data_done
 
@@ -299,6 +300,19 @@ class CommandSource(Source):
         return {
             'count': None,
         }
+
+    def _get_records(self, limit=None):
+        return []
+
+
+class WMTSSource(Source):
+    minzoom = models.IntegerField(null=True)
+    maxzoom = models.IntegerField(null=True)
+    tile_size = models.IntegerField()
+    url = models.URLField()
+
+    def refresh_data(self):
+        return {}
 
     def _get_records(self, limit=None):
         return []
