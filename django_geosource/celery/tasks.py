@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def set_failure_state(task, method, message):
 
     # Failure messaging needs to be formed as expected by celery API
-    logger.warning(message)
+    logger.warning(message, )
     task.update_state(
         state=states.FAILURE,
         meta={
@@ -41,6 +41,7 @@ def run_model_object_method(self, app, model, pk, method):
 
     except AttributeError as e:
         set_failure_state(self, method, f"{method} doesn't exist for object {obj}: {e}")
+        logger.error(e, exc_info=True)
 
     except Exception as e:
         if hasattr(e, 'message'):
@@ -48,5 +49,6 @@ def run_model_object_method(self, app, model, pk, method):
         else:
             message = f'{e}'
         set_failure_state(self, method, message)
+        logger.error(e, exc_info=True)
 
     raise Ignore()
