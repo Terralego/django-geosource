@@ -309,7 +309,7 @@ class WMTSSource(Source):
     minzoom = models.IntegerField(null=True)
     maxzoom = models.IntegerField(null=True)
     tile_size = models.IntegerField()
-    url = models.URLField()
+    url = LongURLField()
 
     def refresh_data(self):
         return {}
