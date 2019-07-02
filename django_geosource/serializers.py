@@ -99,23 +99,25 @@ class SourceSerializer(PolymorphicModelSerializer):
         fields = '__all__'
         model = Source
 
+    def _update_fields(self, source):
+        if source.run_sync_method('update_fields', success_state='NEED_SYNC').result:
+            return source
+        raise ValidationError('Fields update failed')
+
     @transaction.atomic
     def create(self, validated_data):
         # Fields can't be defined at source creation
         validated_data.pop('fields', None)
         source = super().create(validated_data)
-        if source.run_sync_method('update_fields').result:
-            return source
-        raise ValidationError('Fields initialization failed')
+        return self._update_fields(source)
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        fields = validated_data.pop('fields')
+        validated_data.pop('fields')
 
         source = super().update(instance, validated_data)
 
-        if not source.run_sync_method('update_fields').result:
-            raise ValidationError('Fields update failed')
+        self._update_fields(source)
 
         for field_data in self.get_initial().get('fields', []):
 

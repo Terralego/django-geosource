@@ -22,7 +22,7 @@ def set_failure_state(task, method, message):
 
 
 @shared_task(bind=True)
-def run_model_object_method(self, app, model, pk, method):
+def run_model_object_method(self, app, model, pk, method, success_state=states.SUCCESS):
     self.update_state(state=states.STARTED)
 
     Model = apps.get_app_config(app).get_model(model)
@@ -34,7 +34,7 @@ def run_model_object_method(self, app, model, pk, method):
             **getattr(obj, method)()
         }
 
-        self.update_state(state=states.SUCCESS, meta=state)
+        self.update_state(state=success_state, meta=state)
 
     except Model.DoesNotExist:
         set_failure_state(self, method, f"{Model}'s object with pk {pk} doesn't exist")
