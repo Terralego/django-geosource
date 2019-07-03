@@ -12,7 +12,7 @@ class CeleryCallMethodsMixin:
         self.save()
 
     def run_async_method(self, method, success_state=states.SUCCESS, force=False):
-        if self.get_status().get('state') in ('SUCCESS', 'FAILURE', None) or force:
+        if self.get_status().get('state') in ('SUCCESS', 'FAILURE', 'NEED_SYNC', None) or force:
             task_job = celery_app.send_task(
                 'django_geosource.celery.tasks.run_model_object_method',
                 (self._meta.app_label, self.__class__.__name__, self.pk, method))
