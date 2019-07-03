@@ -114,21 +114,22 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         self.slug = slugify(self.name)
         return super().save(*args, **kwargs)
 
-    @transaction.atomic
     def refresh_data(self):
-        layer = self.get_layer()
-        begin_date = datetime.now()
-        row_count = 0
+        with transaction.atomic():
+            with transaction.atomic():
+                layer = self.get_layer()
+                begin_date = datetime.now()
+                row_count = 0
 
-        for row in self._get_records():
-            geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
-            identifier = row[self.id_field]
-            self.update_feature(layer, identifier, geometry, row)
-            row_count += 1
+                for row in self._get_records():
+                    geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
+                    identifier = row[self.id_field]
+                    self.update_feature(layer, identifier, geometry, row)
+                    row_count += 1
 
-        self.clear_features(layer, begin_date)
+                self.clear_features(layer, begin_date)
 
-        refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
+            refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
 
         return {
             'count': row_count,
