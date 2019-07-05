@@ -201,6 +201,7 @@ class Field(models.Model):
     name = models.CharField(max_length=255, blank=False)
     label = models.CharField(max_length=255)
     data_type = models.IntegerField(choices=FieldTypes.choices(), default=FieldTypes.Undefined.value)
+    level = models.IntegerField(default=0)
     sample = JSONField(default=list)
 
     def __str__(self):
