@@ -312,6 +312,11 @@ class WMTSSource(Source):
     tile_size = models.IntegerField()
     url = LongURLField()
 
+    def get_status(self):
+        return {
+            'state': 'DONT_NEED',
+        }
+
     def refresh_data(self):
         return {}
 

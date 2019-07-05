@@ -187,7 +187,6 @@ class WMTSSourceSerialize(SourceSerializer):
     minzoom = IntegerField(min_value=0, max_value=24, allow_null=True)
     maxzoom = IntegerField(min_value=0, max_value=24, allow_null=True)
 
-
     class Meta:
         model = WMTSSource
         fields = '__all__'
