@@ -3,7 +3,8 @@ from os.path import basename
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, SlugField, ValidationError
+from rest_framework.serializers import (IntegerField, ModelSerializer, SerializerMethodField, SlugField,
+                                        ValidationError)
 
 from .models import CommandSource, GeoJSONSource, PostGISSource, Source, Field, WMTSSource
 
@@ -183,6 +184,9 @@ class CommandSourceSerializer(SourceSerializer):
 
 
 class WMTSSourceSerialize(SourceSerializer):
+    minzoom = IntegerField(min_value=0, max_value=24, allow_null=True)
+    maxzoom = IntegerField(min_value=0, max_value=24, allow_null=True)
+
 
     class Meta:
         model = WMTSSource
