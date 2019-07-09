@@ -161,7 +161,7 @@ class GeoJSONSourceSerializer(SourceSerializer):
 
     def get_filename(self, instance):
         if instance.file:
-            return basename(instance.file.path)
+            return basename(instance.file.name)
 
     class Meta:
         model = GeoJSONSource
