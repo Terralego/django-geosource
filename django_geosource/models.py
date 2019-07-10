@@ -4,6 +4,7 @@ import logging
 import json
 from os import sys
 from enum import Enum, IntEnum, auto
+
 from celery.result import AsyncResult
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
@@ -12,6 +13,7 @@ from django.core.management import call_command
 from django.core.validators import RegexValidator, URLValidator
 from django.db import models, transaction
 from django.utils.text import slugify
+import fiona
 from polymorphic.models import PolymorphicModel
 import psycopg2
 from psycopg2 import sql
@@ -259,7 +261,7 @@ class PostGISSource(Source):
 
 
 class GeoJSONSource(Source):
-    file = models.FileField(upload_to='geosource/')
+    file = models.FileField(upload_to='geosource/geojson/%Y/')
 
     def get_file_as_dict(self):
         try:
@@ -280,6 +282,22 @@ class GeoJSONSource(Source):
             }
             for r in geojson['features'][:limit]
         ]
+
+
+class ShapefileSource(Source):
+    file = models.FileField(upload_to='geosource/shapefile/%Y/')
+
+    def _get_records(self, limit=None):
+        with fiona.BytesCollection(self.file.read()) as shapefile:
+
+            limit = limit if limit else len(shapefile)
+            return [
+                {
+                    self.SOURCE_GEOM_ATTRIBUTE: json.dumps(feature.get('geometry')),
+                    **feature.get('properties', {})
+                }
+                for feature in shapefile[:limit]
+            ]
 
 
 class CommandSource(Source):

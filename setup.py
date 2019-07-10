@@ -31,5 +31,6 @@ setup(
         "djangorestframework>=3.8,<3.9",
         "django-polymorphic>=2.0,<2.1",
         "celery>=4.3,<4.4",
+        "Fiona>=1.7,<1.8",
     ],
 )

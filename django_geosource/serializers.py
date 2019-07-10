@@ -6,7 +6,7 @@ from django.db import transaction
 from rest_framework.serializers import (IntegerField, ModelSerializer, SerializerMethodField, SlugField,
                                         ValidationError)
 
-from .models import CommandSource, GeoJSONSource, PostGISSource, Source, Field, WMTSSource
+from .models import CommandSource, GeoJSONSource, PostGISSource, ShapefileSource, Source, Field, WMTSSource
 
 
 class PolymorphicModelSerializer(ModelSerializer):
@@ -165,6 +165,27 @@ class GeoJSONSourceSerializer(SourceSerializer):
 
     class Meta:
         model = GeoJSONSource
+        fields = '__all__'
+        extra_kwargs = {
+            'file': {'write_only': True}
+        }
+
+
+class ShapefileSourceSerializer(SourceSerializer):
+    filename = SerializerMethodField()
+
+    def to_internal_value(self, data):
+        if len(data.get('file', [])) > 0:
+            data['file'] = data['file'][0]
+
+        return super().to_internal_value(data)
+
+    def get_filename(self, instance):
+        if instance.file:
+            return basename(instance.file.name)
+
+    class Meta:
+        model = ShapefileSource
         fields = '__all__'
         extra_kwargs = {
             'file': {'write_only': True}
