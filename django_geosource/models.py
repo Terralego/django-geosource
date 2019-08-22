@@ -90,6 +90,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     settings = JSONField(default=dict)
 
     status = models.CharField(null=True, max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     SOURCE_GEOM_ATTRIBUTE = '_geom_'
     MAX_SAMPLE_DATA = 5
