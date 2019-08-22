@@ -12,6 +12,8 @@ You must define in your project settings the variables CELERY_BROKER_URL and CEL
 To run the celery worker:
 `$ celery worker -A django_geosource -l info`
 
+To run the celery beat worker that allow to synchronize periodically sources, launch this command:
+`$ celery beat --scheduler django_geosource.celery.schedulers.GeosourceScheduler -A django_geosource -l info`
 
 ## Configure data destination
 Now, you must set the callback methods that are used to insert data in your destination database.
