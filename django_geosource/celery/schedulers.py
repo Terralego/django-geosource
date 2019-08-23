@@ -22,7 +22,7 @@ class SourceEntry(ScheduleEntry):
         logger.info(f'Is {self.source} due to refresh ?')
 
         if self.source.refresh > 0:
-            next_run = self.last_run_at + timedelta(seconds=self.source.refresh)
+            next_run = self.last_run_at + timedelta(minutes=self.source.refresh)
             logger.info(f'Refresh : {self.source.refresh} | Next run : {next_run} | Now : {timezone.now()}')
             if next_run < timezone.now():
                 logger.info('Source is due to refresh')
