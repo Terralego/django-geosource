@@ -23,12 +23,12 @@ class SourceEntry(ScheduleEntry):
 
         if self.source.refresh > 0:
             next_run = self.last_run_at + timedelta(minutes=self.source.refresh)
-            logger.info(f'Refresh : {self.source.refresh} | Next run : {next_run} | Now : {timezone.now()}')
+            logger.debug(f'Refresh : {self.source.refresh} | Next run : {next_run} | Now : {timezone.now()}')
             if next_run < timezone.now():
                 logger.info('Source is due to refresh')
                 return schedules.schedstate(True, 10.0)
             else:
-                logger.info("Source is NOT due to refresh, let's wait")
+                logger.debug("Source is NOT due to refresh, let's wait")
                 return schedules.schedstate(False, 10.0)
 
         logger.info('The refresh is disabled for this source, check again later')
@@ -81,6 +81,7 @@ class GeosourceScheduler(Scheduler):
     @property
     def schedule(self):
         if self.should_sync():
+            logger.debug('Resync schedule entries')
             self.sync()
             self._schedule = self.all_entries()
 
@@ -91,10 +92,12 @@ class GeosourceScheduler(Scheduler):
         super().sync()
 
     def should_sync(self):
-        last_update = PostGISSource.objects.order_by('-updated_at').first().updated_at
+        last_update = PostGISSource.objects.order_by('-updated_at').first()
 
-        if not self._last_sync or timezone.make_aware(datetime.fromtimestamp(self._last_sync)) < last_update:
-            return True
+        if not self._last_sync or (
+            last_update and (timezone.make_aware(datetime.fromtimestamp(self._last_sync)) < last_update.updated_at)
+            ):
+                return True
 
         return False
 
@@ -107,13 +110,7 @@ class GeosourceScheduler(Scheduler):
 
     def tick(self, event_t=event_t, min=min, heappop=heapq.heappop,
              heappush=heapq.heappush):
-        """Run a tick - one iteration of the scheduler.
 
-        Executes one due task per call.
-
-        Returns:
-            float: preferred delay in seconds for next call.
-        """
         logger.debug('Ticking')
 
         max_interval = self.max_interval
@@ -126,6 +123,7 @@ class GeosourceScheduler(Scheduler):
         H = self._heap
 
         if not H:
+            logger.info('There is no source to synchronize')
             return max_interval
 
         event = H[0]
