@@ -1,9 +1,12 @@
 import json
 from os.path import basename
 
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
-from rest_framework.serializers import (IntegerField, ModelSerializer, SerializerMethodField, SlugField,
+import psycopg2
+from psycopg2 import sql
+from rest_framework.serializers import (CharField, IntegerField, ModelSerializer, SerializerMethodField, SlugField,
                                         ValidationError)
 
 from .models import CommandSource, GeoJSONSource, PostGISSource, ShapefileSource, Source, Field, WMTSSource
@@ -105,6 +108,8 @@ class SourceSerializer(PolymorphicModelSerializer):
             return source
         raise ValidationError('Fields update failed')
 
+
+
     @transaction.atomic
     def create(self, validated_data):
         # Fields can't be defined at source creation
@@ -141,6 +146,60 @@ class SourceSerializer(PolymorphicModelSerializer):
 
 
 class PostGISSourceSerializer(SourceSerializer):
+    id_field = CharField(required=False)
+    geom_field = CharField(required=False)
+
+    def _get_connection(self, data):
+        conn = psycopg2.connect(user=data.get('db_username'),
+                                password=data.get('db_password'),
+                                host=data.get('db_host'),
+                                port=data.get('db_port', 5432),
+                                dbname=data.get('db_name'))
+        return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    def _first_record(self, data):
+        cursor = self._get_connection(data)
+        query = "SELECT * FROM ({}) q LIMIT 1"
+        cursor.execute(
+            sql.SQL(query).format(sql.SQL(data['query']))
+        )
+        return cursor.fetchone()
+
+    def _validate_geom(self, data):
+        ''' Validate that geom_field exists else try to find it in source
+        '''
+        first_record = self._first_record(data)
+
+        if data.get('geom_field') is None:
+            for k, v in first_record.items():
+                try:
+                    geom = GEOSGeometry(v)
+                    if geom.geom_typeid == data.get('geom_type'):
+                        data['geom_field'] = k
+                        break
+                except Exception:
+                    pass
+            else:
+                raise ValidationError('No geom field found')
+        elif data.get('geom_field') not in first_record:
+            raise ValidationError('Field does not exist in source')
+
+        return data
+
+    def _validate_query_connection(self, data):
+        ''' Check if connection informations are valid or not, trying to
+        connect to the Pg server and executing the query
+        '''
+        try:
+            self._first_record(data)
+        except Exception:
+            raise ValidationError('Connection informations or query are not valid')
+
+    def validate(self, data):
+        self._validate_query_connection(data)
+        data = self._validate_geom(data)
+
+        return super().validate(data)
 
     class Meta:
         model = PostGISSource
