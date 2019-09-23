@@ -155,11 +155,19 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
                     field.sample = []
                     fields[field_name] = field
 
-                if len(fields[field_name].sample) < self.MAX_SAMPLE_DATA and value is not None:
-                    fields[field_name].sample.append(value)
-
                 if is_new or fields[field_name].data_type == FieldTypes.Undefined:
                     fields[field_name].data_type = FieldTypes.get_type_from_data(value).value
+
+                if len(fields[field_name].sample) < self.MAX_SAMPLE_DATA and value is not None:
+
+                    if isinstance(value, bytes):
+                        try:
+                            value = value.decode()
+                        except (UnicodeDecodeError, AttributeError):
+                            logger.warning(f"{field_name} couldn't be decoded for source {self.pk}")
+                            continue
+
+                    fields[field_name].sample.append(value)
 
         for field in fields.values():
             field.save()
