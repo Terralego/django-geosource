@@ -299,11 +299,18 @@ class ShapefileSource(Source):
 
     def _get_records(self, limit=None):
         with fiona.BytesCollection(self.file.read()) as shapefile:
-
             limit = limit if limit else len(shapefile)
+
+            # Detect the EPSG
+            _, srid = shapefile.crs.get('init', 'epsg:4326').split(':')
+
+            # Return geometries with a hack to set the correct geometry srid
             return [
                 {
-                    self.SOURCE_GEOM_ATTRIBUTE: json.dumps(feature.get('geometry')),
+                    self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
+                        GEOSGeometry(json.dumps(feature.get('geometry'))).wkt,
+                        srid=int(srid),
+                    ),
                     **feature.get('properties', {})
                 }
                 for feature in shapefile[:limit]
