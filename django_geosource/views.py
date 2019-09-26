@@ -15,6 +15,7 @@ class SourceModelViewset(ModelViewSet):
     parser_classes = (JSONParser, NestedMultipartJSONParser)
     serializer_class = SourceSerializer
     permission_classes = (SourcePermission, )
+    ordering_fields = filter_fields = ('name', 'geom_type', 'id', 'slug', )
 
     def get_queryset(self):
         return self.model.objects.all()
