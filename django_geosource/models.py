@@ -89,7 +89,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
 
     settings = JSONField(default=dict)
 
-    status = models.CharField(null=True, max_length=255)
+    task_id = models.CharField(null=True, max_length=255)
+    task_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -182,8 +183,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     def get_status(self):
         response = {}
 
-        if self.status:
-            task = AsyncResult(self.status, app=celery_app)
+        if self.task_id:
+            task = AsyncResult(self.task_id, app=celery_app)
             response = {
                 'state': task.state,
                 'done': task.date_done,
