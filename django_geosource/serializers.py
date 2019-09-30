@@ -9,7 +9,7 @@ from psycopg2 import sql
 from rest_framework.serializers import (CharField, IntegerField, ModelSerializer, SerializerMethodField, SlugField,
                                         ValidationError)
 
-from .models import CommandSource, GeoJSONSource, PostGISSource, ShapefileSource, Source, Field, WMTSSource
+from .models import CommandSource, GeoJSONSource, GeometryTypes, PostGISSource, ShapefileSource, Source, Field, WMTSSource
 
 
 class PolymorphicModelSerializer(ModelSerializer):
@@ -179,8 +179,10 @@ class PostGISSourceSerializer(SourceSerializer):
                         break
                 except Exception:
                     pass
+
             else:
-                raise ValidationError('No geom field found')
+                geomtype_name = GeometryTypes(data.get('geom_type')).name
+                raise ValidationError(f'No geom field found of type {geomtype_name}')
         elif data.get('geom_field') not in first_record:
             raise ValidationError('Field does not exist in source')
 
