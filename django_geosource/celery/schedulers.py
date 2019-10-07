@@ -95,8 +95,7 @@ class GeosourceScheduler(Scheduler):
         last_update = PostGISSource.objects.order_by('-updated_at').first()
 
         if not self._last_sync or (
-            last_update and (timezone.make_aware(datetime.fromtimestamp(self._last_sync)) < last_update.updated_at)
-            ):
+            last_update and (datetime.fromtimestamp(self._last_sync) < last_update.updated_at)):
                 return True
 
         return False
