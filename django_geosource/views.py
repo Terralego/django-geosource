@@ -1,4 +1,4 @@
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -20,7 +20,7 @@ class SourceModelViewset(ModelViewSet):
     def get_queryset(self):
         return self.model.objects.all()
 
-    @detail_route(methods=['get', ])
+    @action(detail=True, methods=['get', ])
     def refresh(self, request, pk):
         source = self.get_object()
 
