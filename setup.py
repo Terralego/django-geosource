@@ -40,7 +40,7 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
-        "Django==2.2.5",
+        "Django>=2.2,<3.0",
         "djangorestframework>=3.8,<3.9",
         "django-polymorphic>=2.0,<2.1",
         "celery>=4.3,<4.4",
