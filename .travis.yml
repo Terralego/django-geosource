@@ -55,7 +55,7 @@ jobs:
     deploy:
       stage: deploy
       provider: pypi
-      user: __token__
+      user: "__token__"
       password:
         secure: ocbphtRPcuiK/x1KFRgpZpua1qaEV+8J0ELC1N3EJ5gZDszIsRBTrUqPPkL2CjK8qwcwJqgD2KwmQzp9qwlQe/dejlFRqIaeuDpazmUmfqd/47DHjOzMXXDtMKS6bCiTUeJESKCEn5fb4aFitiAq9BWq9uQg1JfxKMPGYJh0Vlm2jgBMo+ZF+ygoSPoMBCDpV4DB9Yp0W+QkpESMgmeN72r60z9/2o+zsbHuyfadVBo6oDYa6hXO/xUP7dHHE+JgVk9oZ3br9kuMpOxGdIH8YjYVdFvPUVEZoUDYUNFiJ6L4hrbTUOYtPX29n+6zdwatoPWpwjItMDANf/1cWAsvXF1CHlz+COXoUbwI2VyomS6beg1Arm5NY7B9IJoUy9OOxTD45dSs3EEmktpFEdzs0t4d0HobotlnFGiwbUQ1X21VDlzYIVBYh4J1FaDZPA6COkEDBEYq3//6ouVL1ldYt1lgUjDdfxRyV8RB9EWOGvJQeONcaBZ1z1CnlSBYEtLz4NG9vmxlmj1Y62PPdu6R7uf/SQUyYXjY4uL5wzodwm6GDruNvQYcZuYt11cH7JzfL1OK+co8HdFQpvZnmJOo2FJkjZ0eUdBQmKFyfF2PSXq+YB6WCKb9/VruI1xZoD1CJGLRqrD6Y7KEWGekL+r2EPy1lqdToJWCD2mnvss/Uyw=
       on:
