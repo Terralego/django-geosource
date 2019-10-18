@@ -47,7 +47,7 @@ jobs:
     install:
     - pip install flake8
     script:
-    - flake8 geostore
+    - flake8 django_geolayer
   - stage: deploy
     install: skip
     before_script: skip
