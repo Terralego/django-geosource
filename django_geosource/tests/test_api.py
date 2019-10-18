@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
@@ -28,10 +29,13 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(
             Source.objects.count(),
-            len(response.json()['results'])
+            len(response.json())
         )
 
-    @patch('django_geosource.models.Source.update_fields', MagicMock(return_value=True))
+    @patch('django_geosource.serializers.PostGISSourceSerializer._first_record',
+           MagicMock(return_value={'geom': GEOSGeometry('POINT (0 0)')}))
+    @patch('django_geosource.models.Source.update_fields', MagicMock(return_value={'count': 1}))
+    @patch('django_geosource.models.Source.get_status', MagicMock(return_value={}))
     def test_postgis_source_creation(self):
         source_example = {
             '_type': 'PostGISSource',
@@ -54,7 +58,10 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertDictContainsSubset(source_example , response.json())
 
-    @patch('django_geosource.models.Source.update_fields', MagicMock(return_value=True))
+    @patch('django_geosource.serializers.PostGISSourceSerializer._first_record',
+           MagicMock(return_value={'geom': GEOSGeometry('POINT (0 0)')}))
+    @patch('django_geosource.models.Source.update_fields', MagicMock(return_value={'count': 1}))
+    @patch('django_geosource.models.Source.get_status', MagicMock(return_value={}))
     def test_update_fields(self):
         source = PostGISSource.objects.create(
             name='Test Update Source',
@@ -85,6 +92,7 @@ class ModelSourceViewsetTestCase(TestCase):
             reverse('geosource:geosource-detail', args=[source.pk]),
             source_json,
         )
+
         self.assertEqual(update_response.status_code, HTTP_200_OK)
         self.assertEqual(update_response.json().get('fields')[0]['label'], test_field_label)
 
