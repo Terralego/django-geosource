@@ -128,7 +128,12 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
 
             for row in self._get_records():
                 geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
-                identifier = row[self.id_field]
+                try:
+                    identifier = row[self.id_field]
+                except KeyError:
+                    raise Exception(
+                        "Can't find identifier field in one or more records"
+                    )
                 self.update_feature(layer, identifier, geometry, row)
                 row_count += 1
 
@@ -281,9 +286,7 @@ class PostGISSource(Source):
         cursor = self._db_connection
 
         query = "SELECT * FROM ({}) q "
-        attrs = [
-            sql.SQL(self.query),
-        ]
+        attrs = [sql.SQL(self.query)]
         if limit:
             query += "LIMIT {}"
             attrs.append(sql.Literal(limit))

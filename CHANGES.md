@@ -3,6 +3,7 @@
 
 ### Improves
 
+* Improve error message when identifier field is not found in the source
 * Improve error message when geojson features has bad geometries
 * Use black for linting in pipelines
 
