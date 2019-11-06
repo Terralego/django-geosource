@@ -139,7 +139,9 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
 
             self.clear_features(layer, begin_date)
 
-        refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
+        refresh_data_done.send_robust(
+            sender=self.__class__, layer=layer.pk,
+        )
 
         return {"count": row_count}
 
