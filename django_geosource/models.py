@@ -286,13 +286,17 @@ class GeoJSONSource(Source):
 
         limit = limit if limit else len(geojson['features'])
 
-        return [
-            {
-                self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(json.dumps(r['geometry'])),
-                **r['properties']
-            }
-            for r in geojson['features'][:limit]
-        ]
+        records = []
+        for record in geojson['features'][:limit]:
+            try:
+                records.append({
+                    self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(json.dumps(record['geometry'])),
+                    **record['properties']
+                })
+            except ValueError:
+                raise ValueError(f"One of source's record has bad geometry: {record['geometry']}")
+
+        return records
 
 
 class ShapefileSource(Source):
