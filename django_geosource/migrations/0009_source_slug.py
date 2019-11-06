@@ -14,9 +14,7 @@ def set_default(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("django_geosource", "0008_source_settings"),
-    ]
+    dependencies = [("django_geosource", "0008_source_settings")]
 
     operations = [
         migrations.AddField(

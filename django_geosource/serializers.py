@@ -103,11 +103,7 @@ class FieldSerializer(ModelSerializer):
     class Meta:
         model = Field
         exclude = ("source",)
-        read_only_fields = (
-            "name",
-            "sample",
-            "source",
-        )
+        read_only_fields = ("name", "sample", "source")
 
 
 class SourceSerializer(PolymorphicModelSerializer):
@@ -265,7 +261,7 @@ class CommandSourceSerializer(SourceSerializer):
     class Meta:
         model = CommandSource
         fields = "__all__"
-        extra_kwargs = {"command": {"read_only": True,}}
+        extra_kwargs = {"command": {"read_only": True}}
 
 
 class WMTSSourceSerialize(SourceSerializer):

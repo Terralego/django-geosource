@@ -5,12 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("django_geosource", "0011_auto_20190628_1449"),
-    ]
+    dependencies = [("django_geosource", "0011_auto_20190628_1449")]
 
     operations = [
         migrations.AddField(
-            model_name="field", name="level", field=models.IntegerField(default=0),
-        ),
+            model_name="field", name="level", field=models.IntegerField(default=0)
+        )
     ]

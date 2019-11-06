@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("django_geosource", "0001_initial"),
-    ]
+    dependencies = [("django_geosource", "0001_initial")]
 
     operations = [
         migrations.AlterField(
             model_name="postgissource",
             name="refresh",
             field=models.IntegerField(default=-1),
-        ),
+        )
     ]

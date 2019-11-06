@@ -141,9 +141,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
 
         refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
 
-        return {
-            "count": row_count,
-        }
+        return {"count": row_count}
 
     @transaction.atomic
     def update_fields(self):
@@ -159,7 +157,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
 
                 if field_name not in fields:
                     field, is_new = self.fields.get_or_create(
-                        name=field_name, defaults={"label": field_name,}
+                        name=field_name, defaults={"label": field_name}
                     )
                     field.sample = []
                     fields[field_name] = field
@@ -191,19 +189,14 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         # Delete fields that are not anymore present
         self.fields.exclude(name__in=fields.keys()).delete()
 
-        return {
-            "count": len(fields),
-        }
+        return {"count": len(fields)}
 
     def get_status(self):
         response = {}
 
         if self.task_id:
             task = AsyncResult(self.task_id, app=celery_app)
-            response = {
-                "state": task.state,
-                "done": task.date_done,
-            }
+            response = {"state": task.state, "done": task.date_done}
 
             if task.successful():
                 response["result"] = task.result
@@ -367,13 +360,9 @@ class CommandSource(Source):
 
         self.clear_features(layer, begin_date)
 
-        refresh_data_done.send_robust(
-            sender=self.__class__, layer=layer.pk,
-        )
+        refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk)
 
-        return {
-            "count": None,
-        }
+        return {"count": None}
 
     def _get_records(self, limit=None):
         return []
@@ -386,9 +375,7 @@ class WMTSSource(Source):
     url = LongURLField()
 
     def get_status(self):
-        return {
-            "state": "DONT_NEED",
-        }
+        return {"state": "DONT_NEED"}
 
     def refresh_data(self):
         return {}

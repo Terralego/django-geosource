@@ -12,9 +12,7 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-        ("contenttypes", "0002_remove_content_type_name"),
-    ]
+    dependencies = [("contenttypes", "0002_remove_content_type_name")]
 
     operations = [
         migrations.CreateModel(
@@ -78,7 +76,7 @@ class Migration(migrations.Migration):
                 ),
                 ("status", models.NullBooleanField(default=None)),
             ],
-            options={"abstract": False, "base_manager_name": "objects",},
+            options={"abstract": False, "base_manager_name": "objects"},
             bases=(models.Model, django_geosource.mixins.CeleryCallMethodsMixin),
         ),
         migrations.CreateModel(
@@ -97,7 +95,7 @@ class Migration(migrations.Migration):
                 ),
                 ("file", models.FileField(upload_to="geosource/")),
             ],
-            options={"abstract": False, "base_manager_name": "objects",},
+            options={"abstract": False, "base_manager_name": "objects"},
             bases=("django_geosource.source",),
         ),
         migrations.CreateModel(
@@ -133,7 +131,7 @@ class Migration(migrations.Migration):
                 ("geom_field", models.CharField(max_length=255)),
                 ("refresh", models.IntegerField()),
             ],
-            options={"abstract": False, "base_manager_name": "objects",},
+            options={"abstract": False, "base_manager_name": "objects"},
             bases=("django_geosource.source",),
         ),
         migrations.AddField(
@@ -157,6 +155,6 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterUniqueTogether(
-            name="field", unique_together={("source", "name")},
+            name="field", unique_together={("source", "name")}
         ),
     ]

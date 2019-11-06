@@ -15,9 +15,7 @@ def fix_data_types(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("django_geosource", "0003_auto_20190528_1629"),
-    ]
+    dependencies = [("django_geosource", "0003_auto_20190528_1629")]
 
     operations = [
         migrations.RunPython(fix_data_types),

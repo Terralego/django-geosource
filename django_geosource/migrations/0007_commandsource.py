@@ -6,9 +6,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("django_geosource", "0006_auto_20190612_1020"),
-    ]
+    dependencies = [("django_geosource", "0006_auto_20190612_1020")]
 
     operations = [
         migrations.CreateModel(
@@ -27,7 +25,7 @@ class Migration(migrations.Migration):
                 ),
                 ("command", models.CharField(max_length=255)),
             ],
-            options={"abstract": False, "base_manager_name": "objects",},
+            options={"abstract": False, "base_manager_name": "objects"},
             bases=("django_geosource.source",),
-        ),
+        )
     ]

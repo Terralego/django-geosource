@@ -6,9 +6,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("django_geosource", "0012_field_level"),
-    ]
+    dependencies = [("django_geosource", "0012_field_level")]
 
     operations = [
         migrations.CreateModel(
@@ -27,7 +25,7 @@ class Migration(migrations.Migration):
                 ),
                 ("file", models.FileField(upload_to="geosource/shapefile/%Y/")),
             ],
-            options={"abstract": False, "base_manager_name": "objects",},
+            options={"abstract": False, "base_manager_name": "objects"},
             bases=("django_geosource.source",),
         ),
         migrations.AlterField(

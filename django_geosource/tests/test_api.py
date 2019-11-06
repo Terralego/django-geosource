@@ -98,7 +98,7 @@ class ModelSourceViewsetTestCase(TestCase):
         )
 
         response = self.client.get(
-            reverse("geosource:geosource-detail", args=[source.pk]),
+            reverse("geosource:geosource-detail", args=[source.pk])
         )
         self.assertEqual(response.status_code, HTTP_200_OK)
 
@@ -108,7 +108,7 @@ class ModelSourceViewsetTestCase(TestCase):
         source_json["fields"][0]["label"] = test_field_label
 
         update_response = self.client.patch(
-            reverse("geosource:geosource-detail", args=[source.pk]), source_json,
+            reverse("geosource:geosource-detail", args=[source.pk]), source_json
         )
 
         self.assertEqual(update_response.status_code, HTTP_200_OK)

@@ -6,9 +6,7 @@ import django.utils.timezone
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("django_geosource", "0013_auto_20190709_1735"),
-    ]
+    dependencies = [("django_geosource", "0013_auto_20190709_1735")]
 
     operations = [
         migrations.AddField(
