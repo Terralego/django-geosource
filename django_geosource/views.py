@@ -14,21 +14,18 @@ class SourceModelViewset(ModelViewSet):
     model = Source
     parser_classes = (JSONParser, NestedMultipartJSONParser)
     serializer_class = SourceSerializer
-    permission_classes = (SourcePermission, )
-    ordering_fields = filter_fields = ('name', 'geom_type', 'id', 'slug', )
+    permission_classes = (SourcePermission,)
+    ordering_fields = filter_fields = ("name", "geom_type", "id", "slug")
 
     def get_queryset(self):
         return self.model.objects.all()
 
-    @action(detail=True, methods=['get', ])
+    @action(detail=True, methods=["get"])
     def refresh(self, request, pk):
         source = self.get_object()
 
-        refresh_job = source.run_async_method('refresh_data')
+        refresh_job = source.run_async_method("refresh_data")
         if refresh_job:
-            return Response(
-                        data=source.get_status(),
-                        status=status.HTTP_202_ACCEPTED
-                    )
+            return Response(data=source.get_status(), status=status.HTTP_202_ACCEPTED)
 
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

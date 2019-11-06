@@ -6,18 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0014_auto_20190821_1648'),
+        ("django_geosource", "0014_auto_20190821_1648"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='source',
-            old_name='status',
-            new_name='task_id',
+            model_name="source", old_name="status", new_name="task_id",
         ),
         migrations.AddField(
-            model_name='source',
-            name='task_date',
+            model_name="source",
+            name="task_date",
             field=models.DateTimeField(null=True),
         ),
     ]

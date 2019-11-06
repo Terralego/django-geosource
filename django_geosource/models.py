@@ -29,8 +29,9 @@ logger = logging.getLogger(__name__)
 # Decimal fields must be returned as float
 DEC2FLOAT = psycopg2.extensions.new_type(
     psycopg2.extensions.DECIMAL.values,
-    'DEC2FLOAT',
-    lambda value, curs: float(value) if value is not None else None)
+    "DEC2FLOAT",
+    lambda value, curs: float(value) if value is not None else None,
+)
 psycopg2.extensions.register_type(DEC2FLOAT)
 
 
@@ -84,7 +85,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
-    id_field = models.CharField(max_length=255, default='id')
+    id_field = models.CharField(max_length=255, default="id")
     geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
     settings = JSONField(default=dict)
@@ -94,13 +95,11 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    SOURCE_GEOM_ATTRIBUTE = '_geom_'
+    SOURCE_GEOM_ATTRIBUTE = "_geom_"
     MAX_SAMPLE_DATA = 5
 
     class Meta:
-        permissions = (
-            ('can_manage_sources', 'Can manage sources'),
-        )
+        permissions = (("can_manage_sources", "Can manage sources"),)
 
     def get_layer(self):
         return get_attr_from_path(settings.GEOSOURCE_LAYER_CALLBACK)(self)
@@ -109,7 +108,9 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         return get_attr_from_path(settings.GEOSOURCE_FEATURE_CALLBACK)(self, *args)
 
     def clear_features(self, layer, begin_date):
-        return get_attr_from_path(settings.GEOSOURCE_CLEAN_FEATURE_CALLBACK)(self, layer, begin_date)
+        return get_attr_from_path(settings.GEOSOURCE_CLEAN_FEATURE_CALLBACK)(
+            self, layer, begin_date
+        )
 
     def delete(self, *args, **kwargs):
         get_attr_from_path(settings.GEOSOURCE_DELETE_LAYER_CALLBACK)(self)
@@ -136,7 +137,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
 
         return {
-            'count': row_count,
+            "count": row_count,
         }
 
     @transaction.atomic
@@ -152,20 +153,29 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
                 is_new = False
 
                 if field_name not in fields:
-                    field, is_new = self.fields.get_or_create(name=field_name, defaults={'label': field_name, })
+                    field, is_new = self.fields.get_or_create(
+                        name=field_name, defaults={"label": field_name,}
+                    )
                     field.sample = []
                     fields[field_name] = field
 
                 if is_new or fields[field_name].data_type == FieldTypes.Undefined:
-                    fields[field_name].data_type = FieldTypes.get_type_from_data(value).value
+                    fields[field_name].data_type = FieldTypes.get_type_from_data(
+                        value
+                    ).value
 
-                if len(fields[field_name].sample) < self.MAX_SAMPLE_DATA and value is not None:
+                if (
+                    len(fields[field_name].sample) < self.MAX_SAMPLE_DATA
+                    and value is not None
+                ):
 
                     if isinstance(value, bytes):
                         try:
                             value = value.decode()
                         except (UnicodeDecodeError, AttributeError):
-                            logger.warning(f"{field_name} couldn't be decoded for source {self.pk}")
+                            logger.warning(
+                                f"{field_name} couldn't be decoded for source {self.pk}"
+                            )
                             continue
 
                     fields[field_name].sample.append(value)
@@ -177,7 +187,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         self.fields.exclude(name__in=fields.keys()).delete()
 
         return {
-            'count': len(fields),
+            "count": len(fields),
         }
 
     def get_status(self):
@@ -186,15 +196,15 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         if self.task_id:
             task = AsyncResult(self.task_id, app=celery_app)
             response = {
-                'state': task.state,
-                'done': task.date_done,
+                "state": task.state,
+                "done": task.date_done,
             }
 
             if task.successful():
-                response['result'] = task.result
+                response["result"] = task.result
             if task.failed():
                 task_data = task.backend.get(task.backend.get_key_for_task(task.id))
-                response.update(json.loads(task_data).get('result', {}))
+                response.update(json.loads(task_data).get("result", {}))
 
         return response
 
@@ -202,7 +212,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         raise NotImplementedError
 
     def __str__(self):
-        return f'{self.name} - {self.__class__.__name__}'
+        return f"{self.name} - {self.__class__.__name__}"
 
     @property
     def type(self):
@@ -210,26 +220,36 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
 
 
 class Field(models.Model):
-    source = models.ForeignKey(Source, related_name='fields', on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, related_name="fields", on_delete=models.CASCADE)
     name = models.CharField(max_length=255, blank=False)
     label = models.CharField(max_length=255)
-    data_type = models.IntegerField(choices=FieldTypes.choices(), default=FieldTypes.Undefined.value)
+    data_type = models.IntegerField(
+        choices=FieldTypes.choices(), default=FieldTypes.Undefined.value
+    )
     level = models.IntegerField(default=0)
     sample = JSONField(default=list)
 
     def __str__(self):
-        return f'{self.name} ({self.source.name} - {self.data_type})'
+        return f"{self.name} ({self.source.name} - {self.data_type})"
 
     class Meta:
-        unique_together = ['source', 'name']
+        unique_together = ["source", "name"]
 
 
 class PostGISSource(Source):
     db_host = models.CharField(
         max_length=255,
         validators=[
-            RegexValidator(regex=r'(?:' + URLValidator.ipv4_re + '|' + URLValidator.ipv6_re + '|' + URLValidator.host_re + ')')
-        ]
+            RegexValidator(
+                regex=r"(?:"
+                + URLValidator.ipv4_re
+                + "|"
+                + URLValidator.ipv6_re
+                + "|"
+                + URLValidator.host_re
+                + ")"
+            )
+        ],
     )
     db_port = models.IntegerField(default=5432)
     db_username = models.CharField(max_length=63)
@@ -248,31 +268,33 @@ class PostGISSource(Source):
 
     @property
     def _db_connection(self):
-        conn = psycopg2.connect(user=self.db_username,
-                                password=self.db_password,
-                                host=self.db_host,
-                                port=self.db_port,
-                                dbname=self.db_name)
+        conn = psycopg2.connect(
+            user=self.db_username,
+            password=self.db_password,
+            host=self.db_host,
+            port=self.db_port,
+            dbname=self.db_name,
+        )
         return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     def _get_records(self, limit=None):
         cursor = self._db_connection
 
         query = "SELECT * FROM ({}) q "
-        attrs = [sql.SQL(self.query), ]
+        attrs = [
+            sql.SQL(self.query),
+        ]
         if limit:
             query += "LIMIT {}"
             attrs.append(sql.Literal(limit))
 
-        cursor.execute(
-            sql.SQL(query).format(*attrs)
-        )
+        cursor.execute(sql.SQL(query).format(*attrs))
 
         return cursor
 
 
 class GeoJSONSource(Source):
-    file = models.FileField(upload_to='geosource/geojson/%Y/')
+    file = models.FileField(upload_to="geosource/geojson/%Y/")
 
     def get_file_as_dict(self):
         try:
@@ -284,39 +306,45 @@ class GeoJSONSource(Source):
     def _get_records(self, limit=None):
         geojson = self.get_file_as_dict()
 
-        limit = limit if limit else len(geojson['features'])
+        limit = limit if limit else len(geojson["features"])
 
         records = []
-        for record in geojson['features'][:limit]:
+        for record in geojson["features"][:limit]:
             try:
-                records.append({
-                    self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(json.dumps(record['geometry'])),
-                    **record['properties']
-                })
+                records.append(
+                    {
+                        self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
+                            json.dumps(record["geometry"])
+                        ),
+                        **record["properties"],
+                    }
+                )
             except ValueError:
-                raise ValueError(f"One of source's record has bad geometry: {record['geometry']}")
+                raise ValueError(
+                    f"One of source's record has bad geometry: {record['geometry']}"
+                )
 
         return records
 
 
 class ShapefileSource(Source):
-    file = models.FileField(upload_to='geosource/shapefile/%Y/')
+    file = models.FileField(upload_to="geosource/shapefile/%Y/")
 
     def _get_records(self, limit=None):
         with fiona.BytesCollection(self.file.read()) as shapefile:
             limit = limit if limit else len(shapefile)
 
             # Detect the EPSG
-            _, srid = shapefile.crs.get('init', 'epsg:4326').split(':')
+            _, srid = shapefile.crs.get("init", "epsg:4326").split(":")
 
             # Return geometries with a hack to set the correct geometry srid
             return [
                 {
                     self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
-                        GEOSGeometry(json.dumps(feature.get('geometry'))).wkt,
+                        GEOSGeometry(json.dumps(feature.get("geometry"))).wkt,
                         srid=int(srid),
                     ),
-                    **feature.get('properties', {})
+                    **feature.get("properties", {}),
                 }
                 for feature in shapefile[:limit]
             ]
@@ -336,10 +364,12 @@ class CommandSource(Source):
 
         self.clear_features(layer, begin_date)
 
-        refresh_data_done.send_robust(sender=self.__class__, layer=layer.pk, )
+        refresh_data_done.send_robust(
+            sender=self.__class__, layer=layer.pk,
+        )
 
         return {
-            'count': None,
+            "count": None,
         }
 
     def _get_records(self, limit=None):
@@ -354,7 +384,7 @@ class WMTSSource(Source):
 
     def get_status(self):
         return {
-            'state': 'DONT_NEED',
+            "state": "DONT_NEED",
         }
 
     def refresh_data(self):

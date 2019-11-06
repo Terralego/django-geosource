@@ -6,7 +6,7 @@ from django.utils.text import slugify
 
 
 def set_default(apps, schema_editor):
-    Source = apps.get_model('django_geosource', 'Source')
+    Source = apps.get_model("django_geosource", "Source")
     for source in Source.objects.all():
         source.slug = slugify(source.name)
         source.save()
@@ -15,22 +15,21 @@ def set_default(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0008_source_settings'),
+        ("django_geosource", "0008_source_settings"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='source',
-            name='slug',
+            model_name="source",
+            name="slug",
             field=models.SlugField(null=True, max_length=255, unique=True),
             preserve_default=False,
         ),
         migrations.RunPython(set_default),
         migrations.AlterField(
-            model_name='source',
-            name='slug',
+            model_name="source",
+            name="slug",
             field=models.SlugField(max_length=255, unique=True),
             preserve_default=False,
         ),
-
     ]

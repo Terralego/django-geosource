@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0002_auto_20190524_1137'),
+        ("django_geosource", "0002_auto_20190524_1137"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='source',
-            options={'permissions': (('can_manage_sources', 'Can manage sources'),)},
+            name="source",
+            options={"permissions": (("can_manage_sources", "Can manage sources"),)},
         ),
     ]

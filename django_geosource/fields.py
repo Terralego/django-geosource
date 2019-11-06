@@ -12,7 +12,7 @@ class LongURLField(TextField):
         # As with CharField, this will cause URL validation to be performed
         # twice.
         defaults = {
-            'form_class': forms.URLField,
+            "form_class": forms.URLField,
         }
         defaults.update(kwargs)
         return super().formfield(**defaults)

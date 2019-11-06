@@ -7,13 +7,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0007_commandsource'),
+        ("django_geosource", "0007_commandsource"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='source',
-            name='settings',
+            model_name="source",
+            name="settings",
             field=django.contrib.postgres.fields.jsonb.JSONField(default=dict),
         ),
     ]

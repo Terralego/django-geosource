@@ -8,7 +8,9 @@ class NestedMultipartJSONParser(parsers.MultiPartParser):
     """
 
     def parse(self, stream, media_type=None, parser_context=None):
-        result = super().parse(stream=stream, media_type=media_type, parser_context=parser_context)
+        result = super().parse(
+            stream=stream, media_type=media_type, parser_context=parser_context
+        )
 
         data = {}
         for key, value in result.data.items():

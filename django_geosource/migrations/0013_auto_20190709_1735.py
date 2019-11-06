@@ -7,25 +7,32 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0012_field_level'),
+        ("django_geosource", "0012_field_level"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ShapefileSource',
+            name="ShapefileSource",
             fields=[
-                ('source_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='django_geosource.Source')),
-                ('file', models.FileField(upload_to='geosource/shapefile/%Y/')),
+                (
+                    "source_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="django_geosource.Source",
+                    ),
+                ),
+                ("file", models.FileField(upload_to="geosource/shapefile/%Y/")),
             ],
-            options={
-                'abstract': False,
-                'base_manager_name': 'objects',
-            },
-            bases=('django_geosource.source',),
+            options={"abstract": False, "base_manager_name": "objects",},
+            bases=("django_geosource.source",),
         ),
         migrations.AlterField(
-            model_name='geojsonsource',
-            name='file',
-            field=models.FileField(upload_to='geosource/geojson/%Y/'),
+            model_name="geojsonsource",
+            name="file",
+            field=models.FileField(upload_to="geosource/geojson/%Y/"),
         ),
     ]

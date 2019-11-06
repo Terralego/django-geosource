@@ -7,19 +7,21 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0013_auto_20190709_1735'),
+        ("django_geosource", "0013_auto_20190709_1735"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='source',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            model_name="source",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='source',
-            name='updated_at',
+            model_name="source",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
     ]

@@ -7,13 +7,13 @@ import django_geosource.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0010_wmtssource'),
+        ("django_geosource", "0010_wmtssource"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='wmtssource',
-            name='url',
+            model_name="wmtssource",
+            name="url",
             field=django_geosource.fields.LongURLField(),
         ),
     ]

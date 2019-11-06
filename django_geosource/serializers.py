@@ -6,28 +6,42 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 import psycopg2
 from psycopg2 import sql
-from rest_framework.serializers import (CharField, IntegerField, ModelSerializer, SerializerMethodField, SlugField,
-                                        ValidationError)
+from rest_framework.serializers import (
+    CharField,
+    IntegerField,
+    ModelSerializer,
+    SerializerMethodField,
+    SlugField,
+    ValidationError,
+)
 
-from .models import CommandSource, GeoJSONSource, GeometryTypes, PostGISSource, ShapefileSource, Source, Field, WMTSSource
+from .models import (
+    CommandSource,
+    GeoJSONSource,
+    GeometryTypes,
+    PostGISSource,
+    ShapefileSource,
+    Source,
+    Field,
+    WMTSSource,
+)
 
 
 class PolymorphicModelSerializer(ModelSerializer):
 
-    type_field = '_type'
+    type_field = "_type"
     type_class_map = {}
 
     def __new__(cls, *args, **kwargs):
-        ''' Return the correct serializer depending of the type provided in the type_field
-        '''
+        """ Return the correct serializer depending of the type provided in the type_field
+        """
 
-        if kwargs.pop('many', False):
+        if kwargs.pop("many", False):
             return cls.many_init(*args, **kwargs)
 
+        if "data" in kwargs:
 
-        if 'data' in kwargs:
-
-            data_type = kwargs['data'].get(cls.type_field)
+            data_type = kwargs["data"].get(cls.type_field)
 
             serializer = cls.get_serializer_from_type(data_type)
 
@@ -37,8 +51,8 @@ class PolymorphicModelSerializer(ModelSerializer):
         return super().__new__(cls, *args, **kwargs)
 
     def __init_subclass__(cls, **kwargs):
-        ''' Create a registry of all subclasses of the current class
-        '''
+        """ Create a registry of all subclasses of the current class
+        """
 
         # Register all sub_classes
         cls.type_class_map[cls.Meta.model.__name__] = cls
@@ -47,7 +61,7 @@ class PolymorphicModelSerializer(ModelSerializer):
     def get_serializer_from_type(cls, data_type):
         if data_type in cls.type_class_map:
             return cls.type_class_map[data_type]
-        raise ValidationError({cls.type_field: f"{data_type}'s type is unknown'"} )
+        raise ValidationError({cls.type_field: f"{data_type}'s type is unknown'"})
 
     def to_representation(self, obj):
         serializer = self.get_serializer_from_type(obj.__class__.__name__)
@@ -64,7 +78,6 @@ class PolymorphicModelSerializer(ModelSerializer):
         data[self.type_field] = obj.__class__.__name__
 
         return data
-
 
     def to_internal_value(self, data):
         data_type = data.get(self.type_field)
@@ -87,11 +100,14 @@ class PolymorphicModelSerializer(ModelSerializer):
 
 
 class FieldSerializer(ModelSerializer):
-
     class Meta:
         model = Field
-        exclude = ('source', )
-        read_only_fields = ('name', 'sample', 'source', )
+        exclude = ("source",)
+        read_only_fields = (
+            "name",
+            "sample",
+            "source",
+        )
 
 
 class SourceSerializer(PolymorphicModelSerializer):
@@ -100,42 +116,40 @@ class SourceSerializer(PolymorphicModelSerializer):
     slug = SlugField(max_length=255, read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = "__all__"
         model = Source
 
     def _update_fields(self, source):
-        if source.run_sync_method('update_fields', success_state='NEED_SYNC').result:
+        if source.run_sync_method("update_fields", success_state="NEED_SYNC").result:
             return source
-        raise ValidationError('Fields update failed')
-
-
+        raise ValidationError("Fields update failed")
 
     @transaction.atomic
     def create(self, validated_data):
         # Fields can't be defined at source creation
-        validated_data.pop('fields', None)
+        validated_data.pop("fields", None)
         source = super().create(validated_data)
         return self._update_fields(source)
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        validated_data.pop('fields')
+        validated_data.pop("fields")
 
         source = super().update(instance, validated_data)
 
         self._update_fields(source)
 
-        for field_data in self.get_initial().get('fields', []):
+        for field_data in self.get_initial().get("fields", []):
 
             try:
-                instance = source.fields.get(name=field_data.get('name'))
+                instance = source.fields.get(name=field_data.get("name"))
 
                 serializer = FieldSerializer(instance=instance, data=field_data)
 
                 if serializer.is_valid():
                     serializer.save()
                 else:
-                    raise ValidationError('Field configuration is not valid')
+                    raise ValidationError("Field configuration is not valid")
             except Field.DoesNotExist:
                 pass
 
@@ -150,52 +164,52 @@ class PostGISSourceSerializer(SourceSerializer):
     geom_field = CharField(required=False)
 
     def _get_connection(self, data):
-        conn = psycopg2.connect(user=data.get('db_username'),
-                                password=data.get('db_password'),
-                                host=data.get('db_host'),
-                                port=data.get('db_port', 5432),
-                                dbname=data.get('db_name'))
+        conn = psycopg2.connect(
+            user=data.get("db_username"),
+            password=data.get("db_password"),
+            host=data.get("db_host"),
+            port=data.get("db_port", 5432),
+            dbname=data.get("db_name"),
+        )
         return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     def _first_record(self, data):
         cursor = self._get_connection(data)
         query = "SELECT * FROM ({}) q LIMIT 1"
-        cursor.execute(
-            sql.SQL(query).format(sql.SQL(data['query']))
-        )
+        cursor.execute(sql.SQL(query).format(sql.SQL(data["query"])))
         return cursor.fetchone()
 
     def _validate_geom(self, data):
-        ''' Validate that geom_field exists else try to find it in source
-        '''
+        """ Validate that geom_field exists else try to find it in source
+        """
         first_record = self._first_record(data)
 
-        if data.get('geom_field') is None:
+        if data.get("geom_field") is None:
             for k, v in first_record.items():
                 try:
                     geom = GEOSGeometry(v)
-                    if geom.geom_typeid == data.get('geom_type'):
-                        data['geom_field'] = k
+                    if geom.geom_typeid == data.get("geom_type"):
+                        data["geom_field"] = k
                         break
                 except Exception:
                     pass
 
             else:
-                geomtype_name = GeometryTypes(data.get('geom_type')).name
-                raise ValidationError(f'No geom field found of type {geomtype_name}')
-        elif data.get('geom_field') not in first_record:
-            raise ValidationError('Field does not exist in source')
+                geomtype_name = GeometryTypes(data.get("geom_type")).name
+                raise ValidationError(f"No geom field found of type {geomtype_name}")
+        elif data.get("geom_field") not in first_record:
+            raise ValidationError("Field does not exist in source")
 
         return data
 
     def _validate_query_connection(self, data):
-        ''' Check if connection informations are valid or not, trying to
+        """ Check if connection informations are valid or not, trying to
         connect to the Pg server and executing the query
-        '''
+        """
         try:
             self._first_record(data)
         except Exception:
-            raise ValidationError('Connection informations or query are not valid')
+            raise ValidationError("Connection informations or query are not valid")
 
     def validate(self, data):
         self._validate_query_connection(data)
@@ -205,18 +219,16 @@ class PostGISSourceSerializer(SourceSerializer):
 
     class Meta:
         model = PostGISSource
-        fields = '__all__'
-        extra_kwargs = {
-            'db_password': {'write_only': True}
-        }
+        fields = "__all__"
+        extra_kwargs = {"db_password": {"write_only": True}}
 
 
 class GeoJSONSourceSerializer(SourceSerializer):
     filename = SerializerMethodField()
 
     def to_internal_value(self, data):
-        if len(data.get('file', [])) > 0:
-            data['file'] = data['file'][0]
+        if len(data.get("file", [])) > 0:
+            data["file"] = data["file"][0]
 
         return super().to_internal_value(data)
 
@@ -226,18 +238,16 @@ class GeoJSONSourceSerializer(SourceSerializer):
 
     class Meta:
         model = GeoJSONSource
-        fields = '__all__'
-        extra_kwargs = {
-            'file': {'write_only': True}
-        }
+        fields = "__all__"
+        extra_kwargs = {"file": {"write_only": True}}
 
 
 class ShapefileSourceSerializer(SourceSerializer):
     filename = SerializerMethodField()
 
     def to_internal_value(self, data):
-        if len(data.get('file', [])) > 0:
-            data['file'] = data['file'][0]
+        if len(data.get("file", [])) > 0:
+            data["file"] = data["file"][0]
 
         return super().to_internal_value(data)
 
@@ -247,22 +257,15 @@ class ShapefileSourceSerializer(SourceSerializer):
 
     class Meta:
         model = ShapefileSource
-        fields = '__all__'
-        extra_kwargs = {
-            'file': {'write_only': True}
-        }
+        fields = "__all__"
+        extra_kwargs = {"file": {"write_only": True}}
 
 
 class CommandSourceSerializer(SourceSerializer):
-
     class Meta:
         model = CommandSource
-        fields = '__all__'
-        extra_kwargs = {
-            'command': {
-                'read_only': True,
-                }
-        }
+        fields = "__all__"
+        extra_kwargs = {"command": {"read_only": True,}}
 
 
 class WMTSSourceSerialize(SourceSerializer):
@@ -271,4 +274,4 @@ class WMTSSourceSerialize(SourceSerializer):
 
     class Meta:
         model = WMTSSource
-        fields = '__all__'
+        fields = "__all__"
