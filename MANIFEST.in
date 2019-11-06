@@ -1,0 +1,5 @@
+include *.md
+recursive-include django_geosource *.md
+recursive-include django_geosource *.py
+recursive-exclude test_geosource *
+recursive-exclude django_geosource/tests/ *
