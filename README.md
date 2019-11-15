@@ -18,6 +18,9 @@ To run the celery beat worker that allow to synchronize periodically sources, la
 ## Configure data destination
 Now, you must set the callback methods that are used to insert data in your destination database.
 
+If you use django-geostore, we provide a set of callback in the `geostore_callbacks` module, else you can define your
+own callbacks.
+
 ### GEOSOURCE_LAYER_CALLBACK
 The callback signature receive as first argument the SourceModel object, and must return your Layer object.
 Example:

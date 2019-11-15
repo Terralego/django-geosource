@@ -22,6 +22,9 @@ class SourceModelViewset(ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def refresh(self, request, pk):
+        """ Schedule a refresh now
+        """
+
         source = self.get_object()
 
         refresh_job = source.run_async_method("refresh_data")
