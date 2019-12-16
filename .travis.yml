@@ -50,27 +50,17 @@ script:
 - codecov
 
 jobs:
-  allow_failures:
-    - env: LINT=flake8
-
   include:
   - stage: lint
-    env:
-        matrix:
-          - LINT=flake8
-          - LINT=black
     install:
-    - if [[ LINT == flake8 ]]; then
-      pip install flake8;
-      elif [[ LINT == black ]]; then
-      pip install black;
-      fi
+    - pip install black
     script:
-    - if [[ LINT == flake8 ]]; then
-      flake8 django_geosource;
-      elif [[ LINT == black ]]; then
-      black --check django_geosource;
-      fi
+    - black --check django_geosource
+  -
+    install:
+    - pip install flake8
+    script:
+      - flake8 django_geosource
 
   - stage: deploy
     install: skip
