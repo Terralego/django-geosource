@@ -10,7 +10,7 @@ env:
   matrix:
   - DJANGO_VERSION=2.2.*
   - DJANGO_VERSION=3.0.*
-  # - DJANGO_VERSION=dev blocked by django-polymorphic
+  - DJANGO_VERSION=dev
 
 services:
 - postgresql
@@ -50,6 +50,9 @@ script:
 - codecov
 
 jobs:
+  allow_failures:
+    - env: DJANGO_VERSION=dev
+
   include:
   - stage: lint
     install:
