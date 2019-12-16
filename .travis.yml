@@ -6,9 +6,10 @@ python:
 - '3.7'
 env:
   matrix:
-  - DJANGO_VERSION=2.2 REST_VERSION=3.8
-  - DJANGO_VERSION=2.2 REST_VERSION=3.9
-  - DJANGO_VERSION=2.2 REST_VERSION=3.10
+  - DJANGO_VERSION=2.2.*
+  - DJANGO_VERSION=3.0.*
+  - DJANGO_VERSION=dev
+
 services:
 - postgresql
 addons:
@@ -22,13 +23,12 @@ stages:
 - test
 - deploy
 install:
-- sudo apt-get -y install libproj-dev binutils gdal-bin
+- sudo apt-get -y install libproj-dev binutils gdal-bin libgdal-dev
 - pip install -e .[dev]
 - pip install codecov
 - if [[ $DJANGO_VERSION == dev ]]; then pip install -e git+https://github.com/django/django@master#egg=django;
   else pip install Django==$DJANGO_VERSION -U; fi
-- if [[ $REST_VERSION == dev ]]; then pip install -e git+https://github.com/encode/django-rest-framework.git@master#egg=django-rest-framework;
-  else pip install djangorestframework==$REST_VERSION -U; fi
+
 before_script:
 - psql -c "CREATE USER travis_ci_test WITH ENCRYPTED PASSWORD 'travis_ci_test';" -U
   postgres
@@ -48,6 +48,7 @@ jobs:
     - pip install black
     script:
     - black --check django_geosource
+
   - stage: deploy
     install: skip
     before_script: skip

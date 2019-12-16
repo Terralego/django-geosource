@@ -4,6 +4,7 @@
 ### Improves
 
 * Improve documentation
+* Fix python3.8, django 3.0 and DRF 3.11 compatibility
 
 0.3.3      (2019-11-06)
 -----------------------
