@@ -6,6 +6,6 @@ app_name = "geosource"
 
 router = routers.SimpleRouter()
 
-router.register(r"", SourceModelViewset, base_name="geosource")
+router.register(r"", SourceModelViewset, basename="geosource")
 
 urlpatterns = router.urls
