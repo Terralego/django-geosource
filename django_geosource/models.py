@@ -34,6 +34,10 @@ DEC2FLOAT = psycopg2.extensions.new_type(
 )
 psycopg2.extensions.register_type(DEC2FLOAT)
 
+HOST_REGEX = (
+    rf"(?:{URLValidator.ipv4_re}|{URLValidator.ipv6_re}|{URLValidator.host_re})"
+)
+
 
 class FieldTypes(Enum):
     String = auto()
@@ -59,10 +63,7 @@ class FieldTypes(Enum):
             float: cls.Float,
         }
 
-        try:
-            return types[type(data)]
-        except:
-            return cls.Undefined
+        return types.get(type(data), cls.Undefined)
 
 
 class GeometryTypes(IntEnum):
@@ -238,18 +239,7 @@ class Field(models.Model):
 
 class PostGISSource(Source):
     db_host = models.CharField(
-        max_length=255,
-        validators=[
-            RegexValidator(
-                regex=r"(?:"
-                + URLValidator.ipv4_re
-                + "|"
-                + URLValidator.ipv6_re
-                + "|"
-                + URLValidator.host_re
-                + ")"
-            )
-        ],
+        max_length=255, validators=[RegexValidator(regex=HOST_REGEX)],
     )
     db_port = models.IntegerField(default=5432)
     db_username = models.CharField(max_length=63)

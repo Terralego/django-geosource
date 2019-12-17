@@ -8,7 +8,6 @@ from django_geosource.models import FieldTypes
 def fix_data_types(apps, schema_editor):
     Field = apps.get_model("django_geosource", "Field")
     for field in Field.objects.all():
-        data_type = field.data_type.split(".")[1]
         field.data_type = getattr(FieldTypes, "String").value
         field.save()
 

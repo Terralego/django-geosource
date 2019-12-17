@@ -1,8 +1,6 @@
-import json
 from os.path import basename
 
 from django.contrib.gis.geos import GEOSGeometry
-from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 import psycopg2
 from psycopg2 import sql
@@ -28,14 +26,13 @@ from .models import (
 
 
 class PolymorphicModelSerializer(ModelSerializer):
-
     type_field = "_type"
     type_class_map = {}
 
     def __new__(cls, *args, **kwargs):
-        """ Return the correct serializer depending of the type provided in the type_field
         """
-
+        Return the correct serializer given the type provided in type_field
+        """
         if kwargs.pop("many", False):
             return cls.many_init(*args, **kwargs)
 
@@ -51,17 +48,17 @@ class PolymorphicModelSerializer(ModelSerializer):
         return super().__new__(cls, *args, **kwargs)
 
     def __init_subclass__(cls, **kwargs):
-        """ Create a registry of all subclasses of the current class
-        """
-
-        # Register all sub_classes
+        """ Create a registry of all subclasses of the current class """
         cls.type_class_map[cls.Meta.model.__name__] = cls
 
     @classmethod
     def get_serializer_from_type(cls, data_type):
+        """
+        Returns the serializer class from datatype
+        """
         if data_type in cls.type_class_map:
             return cls.type_class_map[data_type]
-        raise ValidationError({cls.type_field: f"{data_type}'s type is unknown'"})
+        raise ValidationError({cls.type_field: f"{data_type}'s type is unknown"})
 
     def to_representation(self, obj):
         serializer = self.get_serializer_from_type(obj.__class__.__name__)
@@ -139,9 +136,7 @@ class SourceSerializer(PolymorphicModelSerializer):
 
             try:
                 instance = source.fields.get(name=field_data.get("name"))
-
                 serializer = FieldSerializer(instance=instance, data=field_data)
-
                 if serializer.is_valid():
                     serializer.save()
                 else:
@@ -219,7 +214,7 @@ class PostGISSourceSerializer(SourceSerializer):
         extra_kwargs = {"db_password": {"write_only": True}}
 
 
-class GeoJSONSourceSerializer(SourceSerializer):
+class FileSourceSerializer(SourceSerializer):
     filename = SerializerMethodField()
 
     def to_internal_value(self, data):
@@ -232,25 +227,15 @@ class GeoJSONSourceSerializer(SourceSerializer):
         if instance.file:
             return basename(instance.file.name)
 
+
+class GeoJSONSourceSerializer(FileSourceSerializer):
     class Meta:
         model = GeoJSONSource
         fields = "__all__"
         extra_kwargs = {"file": {"write_only": True}}
 
 
-class ShapefileSourceSerializer(SourceSerializer):
-    filename = SerializerMethodField()
-
-    def to_internal_value(self, data):
-        if len(data.get("file", [])) > 0:
-            data["file"] = data["file"][0]
-
-        return super().to_internal_value(data)
-
-    def get_filename(self, instance):
-        if instance.file:
-            return basename(instance.file.name)
-
+class ShapefileSourceSerializer(FileSourceSerializer):
     class Meta:
         model = ShapefileSource
         fields = "__all__"
