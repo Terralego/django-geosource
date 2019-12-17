@@ -56,15 +56,10 @@ jobs:
   include:
   - stage: lint
     install:
-    - pip install black
+    - pip install black flake8
     script:
     - black --check django_geosource
-  #-
-  #  install:
-  #  - pip install flake8
-  #  script:
-  #    - flake8 django_geosource
-
+    - flake8 django_geosource
   - stage: deploy
     install: skip
     before_script: skip
