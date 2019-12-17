@@ -9,6 +9,7 @@ README = open(os.path.join(HERE, 'README.md')).read()
 CHANGES = open(os.path.join(HERE, 'CHANGES.md')).read()
 
 test_require = [
+    'django-filter',
     'factory-boy',
     'flake8',
     'coverage',
@@ -49,4 +50,7 @@ setup(
         "Fiona",
     ],
     tests_require=test_require,
+    extras_require={
+        'dev': test_require,
+    }
 )

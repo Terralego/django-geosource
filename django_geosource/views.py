@@ -15,7 +15,18 @@ class SourceModelViewset(ModelViewSet):
     parser_classes = (JSONParser, NestedMultipartJSONParser)
     serializer_class = SourceSerializer
     permission_classes = (SourcePermission,)
-    ordering_fields = filter_fields = ("name", "geom_type", "id", "slug")
+    ordering_fields = (
+        "name",
+        "polymorphic_ctype__model",
+        "geom_type",
+        "id",
+        "slug",
+    )
+    filter_fields = (
+        "polymorphic_ctype",
+        "geom_type",
+    )
+    search_fields = ["name"]
 
     def get_queryset(self):
         return self.model.objects.all()

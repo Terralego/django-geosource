@@ -90,10 +90,16 @@ this is an autoreload server.
 You can access to the api on http://localhost:8000/api/
 
 
-## Test
+## Test and coverage
 
 To run test suite, just launch:
 
 ```sh
 docker-compose run web /code/venv/bin/python3 /code/src/manage.py test
+```
+
+To run test suite with coverage, execute this commande:
+
+```sh
+docker-compose run web /code/src/coverage.sh
 ```
