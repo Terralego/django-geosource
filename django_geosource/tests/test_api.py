@@ -13,6 +13,7 @@ from django_geosource.models import (
     Field,
     FieldTypes,
     GeometryTypes,
+    GeoJSONSource,
 )
 
 UserModel = get_user_model()
@@ -129,3 +130,26 @@ class ModelSourceViewsetTestCase(TestCase):
 
         self.assertEqual(FieldTypes.String.value, obj.fields.get(name="a").data_type)
         self.assertEqual(FieldTypes.Integer.value, obj.fields.get(name="c").data_type)
+
+    def test_ordering_filtering(self):
+        obj = GeoJSONSource.objects.create(
+            name="foo", geom_type=GeometryTypes.Point.value,
+        )
+
+        list_url = reverse("geosource:geosource-list")
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.json()[0]["name"], obj.name)
+
+        response = self.client.get(list_url, {"ordering": "-name"})
+        self.assertEqual(response.json()[-1]["name"], obj.name)
+
+        response = self.client.get(list_url, {"ordering": "polymorphic_ctype__model"})
+        self.assertEqual(response.json()[0]["name"], obj.name)
+
+        response = self.client.get(
+            list_url, {"polymorphic_ctype__model": "geojsonsource"}
+        )
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], obj.name)
