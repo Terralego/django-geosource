@@ -1,6 +1,8 @@
-0.3.5.dev0   (XXXX-XX-XX)
+0.3.5       (2019-12-18)
 -------------------------
 
+* Add ordering and filtering for sources
+* Add flake8 linting to CI
 
 0.3.4      (2019-12-16)
 -----------------------
