@@ -231,6 +231,7 @@ class FileSourceSerializer(SourceSerializer):
     class Meta:
         model = None
 
+
 class GeoJSONSourceSerializer(FileSourceSerializer):
     class Meta:
         model = GeoJSONSource
