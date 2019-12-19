@@ -49,7 +49,8 @@ class PolymorphicModelSerializer(ModelSerializer):
 
     def __init_subclass__(cls, **kwargs):
         """ Create a registry of all subclasses of the current class """
-        cls.type_class_map[cls.Meta.model.__name__] = cls
+        if cls.Meta.model:
+            cls.type_class_map[cls.Meta.model.__name__] = cls
 
     @classmethod
     def get_serializer_from_type(cls, data_type):
@@ -227,6 +228,8 @@ class FileSourceSerializer(SourceSerializer):
         if instance.file:
             return basename(instance.file.name)
 
+    class Meta:
+        model = None
 
 class GeoJSONSourceSerializer(FileSourceSerializer):
     class Meta:
