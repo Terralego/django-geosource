@@ -1,5 +1,8 @@
 [run]
 source = django_geosource
+
+
+[report]
 omit =
     django_geosource/migrations/*
     django_geosource/tests/*
