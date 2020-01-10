@@ -39,7 +39,7 @@ def feature_callback(geosource, layer, identifier, geometry, attributes):
         return layer.features.update_or_create(
             identifier=identifier, defaults={"properties": attributes, "geom": geom}
         )[0]
-    except TypeError:
+    except (TypeError, ValueError):
         logger.warning(
             f"One record was ignored from source, because of invalid geometry: {attributes}"
         )

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'django_geosource',
+    'geostore'
 ]
 
 INTERNAL_GEOMETRY_SRID = 4326
@@ -136,3 +137,8 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ]
 }
+
+GEOSOURCE_LAYER_CALLBACK = 'django_geosource.geostore_callbacks.layer_callback'
+GEOSOURCE_FEATURE_CALLBACK = 'django_geosource.geostore_callbacks.feature_callback'
+GEOSOURCE_CLEAN_FEATURE_CALLBACK = 'django_geosource.geostore_callbacks.clear_features'
+GEOSOURCE_DELETE_LAYER_CALLBACK = 'django_geosource.geostore_callbacks.delete_layer'
