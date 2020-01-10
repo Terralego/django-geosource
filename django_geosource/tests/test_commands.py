@@ -4,9 +4,7 @@ from unittest import mock
 from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.test import TestCase
-from django.test.utils import override_settings
 from rest_framework.exceptions import MethodNotAllowed
-from celery import current_app as celery
 from celery.exceptions import Ignore
 
 from django_geosource.celery.tasks import run_model_object_method

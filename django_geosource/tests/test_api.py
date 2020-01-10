@@ -1,10 +1,17 @@
+import os
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_202_ACCEPTED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_500_INTERNAL_SERVER_ERROR
+)
 from rest_framework.test import APIClient
 
 from django_geosource.models import (
@@ -40,6 +47,24 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(Source.objects.count(), len(response.json()))
 
+    def test_refresh_view_fail(self):
+        source = GeoJSONSource.objects.create(
+            name="test", geom_type=GeometryTypes.Point.value,
+            file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson')
+        )
+        with patch('django_geosource.mixins.CeleryCallMethodsMixin.run_async_method', return_value=False):
+            response = self.client.get(reverse("geosource:geosource-refresh", args=[source.pk]))
+        self.assertEqual(response.status_code, HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_refresh_view_accepted(self):
+        source = GeoJSONSource.objects.create(
+            name="test", geom_type=GeometryTypes.Point.value,
+            file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson')
+        )
+        with patch('django_geosource.mixins.CeleryCallMethodsMixin.run_async_method', return_value=True):
+            response = self.client.get(reverse("geosource:geosource-refresh", args=[source.pk]))
+        self.assertEqual(response.status_code, HTTP_202_ACCEPTED)
+
     @patch(
         "django_geosource.serializers.PostGISSourceSerializer._first_record",
         MagicMock(return_value={"geom": GEOSGeometry("POINT (0 0)")}),
@@ -68,6 +93,67 @@ class ModelSourceViewsetTestCase(TestCase):
             format="json",
         )
 
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertDictContainsSubset(source_example, response.json())
+
+    @patch(
+        "django_geosource.serializers.PostGISSourceSerializer._first_record",
+        MagicMock(return_value={"geom": GEOSGeometry("POINT (0 0)")}),
+    )
+    @patch(
+        "django_geosource.models.Source.update_fields",
+        MagicMock(return_value={"count": 1}),
+    )
+    @patch("django_geosource.models.Source.get_status", MagicMock(return_value={}))
+    def test_postgis_source_creation_no_geom_field_wrong_geom(self):
+        source_example = {
+            "_type": "PostGISSource",
+            "name": "Test Source",
+            "db_username": "username",
+            "db_name": "dbname",
+            "db_host": "hostname.com",
+            "query": "SELECT 1",
+            "geom_field": None,
+            "refresh": -1,
+            "geom_type": GeometryTypes.LineString.value,
+        }
+
+        response = self.client.post(
+            reverse("geosource:geosource-list"),
+            {**source_example, "db_password": "test_password"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual({'non_field_errors': ['No geom field found of type LineString']}, response.json())
+
+    @patch(
+        "django_geosource.serializers.PostGISSourceSerializer._first_record",
+        MagicMock(return_value={"coucou": GEOSGeometry("LINESTRING (0 0, 1 1)")}),
+    )
+    @patch(
+        "django_geosource.models.Source.update_fields",
+        MagicMock(return_value={"count": 1}),
+    )
+    @patch("django_geosource.models.Source.get_status", MagicMock(return_value={}))
+    def test_postgis_source_creation_no_geom_field_good_geom(self):
+        source_example = {
+            "_type": "PostGISSource",
+            "name": "Test Source",
+            "db_username": "username",
+            "db_name": "dbname",
+            "db_host": "hostname.com",
+            "query": "SELECT 1",
+            "geom_field": None,
+            "refresh": -1,
+            "geom_type": GeometryTypes.LineString.value,
+        }
+
+        response = self.client.post(
+            reverse("geosource:geosource-list"),
+            {**source_example, "db_password": "test_password"},
+            format="json",
+        )
+        source_example['geom_field'] = "coucou"
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertDictContainsSubset(source_example, response.json())
 
@@ -119,6 +205,52 @@ class ModelSourceViewsetTestCase(TestCase):
 
         field.refresh_from_db()
         self.assertEqual(field.label, test_field_label)
+
+    @patch(
+        "django_geosource.serializers.PostGISSourceSerializer._first_record",
+        MagicMock(return_value={"geom": GEOSGeometry("POINT (0 0)")}),
+    )
+    @patch(
+        "django_geosource.models.Source.update_fields",
+        MagicMock(return_value={"count": 1}),
+    )
+    @patch("django_geosource.models.Source.get_status", MagicMock(return_value={}))
+    def test_update_fields_fail_from_source(self):
+        def run_sync_method_result(cmd, success_state):
+            value = MagicMock()
+            value.result = False
+            return value
+        source = PostGISSource.objects.create(
+            name="Test Update Source",
+            db_host="localhost",
+            db_name="dbname",
+            db_username="username",
+            query="SELECT 1",
+            geom_field="geom",
+            refresh=-1,
+            geom_type=GeometryTypes.LineString.value,
+        )
+        Field.objects.create(
+            source=source,
+            name="field_name",
+            label="Label",
+            data_type=FieldTypes.String.value,
+        )
+        response = self.client.get(
+            reverse("geosource:geosource-detail", args=[source.pk])
+        )
+        self.assertEqual(response.status_code, HTTP_200_OK)
+
+        test_field_label = "New Test Label"
+
+        source_json = response.json()
+        source_json["fields"][0]["label"] = test_field_label
+        with patch('django_geosource.mixins.CeleryCallMethodsMixin.run_sync_method',
+                   side_effect=run_sync_method_result):
+            update_response = self.client.patch(
+                reverse("geosource:geosource-detail", args=[source.pk]), source_json
+            )
+        self.assertEqual(update_response.status_code, HTTP_400_BAD_REQUEST)
 
     @patch(
         "django_geosource.models.Source._get_records",
