@@ -10,7 +10,7 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_202_ACCEPTED,
     HTTP_400_BAD_REQUEST,
-    HTTP_500_INTERNAL_SERVER_ERROR
+    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 from rest_framework.test import APIClient
 
@@ -49,20 +49,32 @@ class ModelSourceViewsetTestCase(TestCase):
 
     def test_refresh_view_fail(self):
         source = GeoJSONSource.objects.create(
-            name="test", geom_type=GeometryTypes.Point.value,
-            file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson')
+            name="test",
+            geom_type=GeometryTypes.Point.value,
+            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
         )
-        with patch('django_geosource.mixins.CeleryCallMethodsMixin.run_async_method', return_value=False):
-            response = self.client.get(reverse("geosource:geosource-refresh", args=[source.pk]))
+        with patch(
+            "django_geosource.mixins.CeleryCallMethodsMixin.run_async_method",
+            return_value=False,
+        ):
+            response = self.client.get(
+                reverse("geosource:geosource-refresh", args=[source.pk])
+            )
         self.assertEqual(response.status_code, HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_refresh_view_accepted(self):
         source = GeoJSONSource.objects.create(
-            name="test", geom_type=GeometryTypes.Point.value,
-            file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson')
+            name="test",
+            geom_type=GeometryTypes.Point.value,
+            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
         )
-        with patch('django_geosource.mixins.CeleryCallMethodsMixin.run_async_method', return_value=True):
-            response = self.client.get(reverse("geosource:geosource-refresh", args=[source.pk]))
+        with patch(
+            "django_geosource.mixins.CeleryCallMethodsMixin.run_async_method",
+            return_value=True,
+        ):
+            response = self.client.get(
+                reverse("geosource:geosource-refresh", args=[source.pk])
+            )
         self.assertEqual(response.status_code, HTTP_202_ACCEPTED)
 
     @patch(
@@ -124,7 +136,10 @@ class ModelSourceViewsetTestCase(TestCase):
             format="json",
         )
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual({'non_field_errors': ['No geom field found of type LineString']}, response.json())
+        self.assertEqual(
+            {"non_field_errors": ["No geom field found of type LineString"]},
+            response.json(),
+        )
 
     @patch(
         "django_geosource.serializers.PostGISSourceSerializer._first_record",
@@ -153,7 +168,7 @@ class ModelSourceViewsetTestCase(TestCase):
             {**source_example, "db_password": "test_password"},
             format="json",
         )
-        source_example['geom_field'] = "coucou"
+        source_example["geom_field"] = "coucou"
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertDictContainsSubset(source_example, response.json())
 
@@ -220,6 +235,7 @@ class ModelSourceViewsetTestCase(TestCase):
             value = MagicMock()
             value.result = False
             return value
+
         source = PostGISSource.objects.create(
             name="Test Update Source",
             db_host="localhost",
@@ -245,8 +261,10 @@ class ModelSourceViewsetTestCase(TestCase):
 
         source_json = response.json()
         source_json["fields"][0]["label"] = test_field_label
-        with patch('django_geosource.mixins.CeleryCallMethodsMixin.run_sync_method',
-                   side_effect=run_sync_method_result):
+        with patch(
+            "django_geosource.mixins.CeleryCallMethodsMixin.run_sync_method",
+            side_effect=run_sync_method_result,
+        ):
             update_response = self.client.patch(
                 reverse("geosource:geosource-detail", args=[source.pk]), source_json
             )
@@ -254,7 +272,9 @@ class ModelSourceViewsetTestCase(TestCase):
 
     @patch(
         "django_geosource.models.Source._get_records",
-        MagicMock(return_value=[{"a": "b", "c": 42, "d": b"4", "_geom_": "POINT(0 0)"}]),
+        MagicMock(
+            return_value=[{"a": "b", "c": 42, "d": b"4", "_geom_": "POINT(0 0)"}]
+        ),
     )
     def test_update_fields_method(self):
         obj = Source.objects.create(geom_type=10)
