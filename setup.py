@@ -13,7 +13,7 @@ test_require = [
     'factory-boy',
     'flake8',
     'coverage',
-    'django-geostore'
+    'django-geostore',
 ]
 
 setup(
