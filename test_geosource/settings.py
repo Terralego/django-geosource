@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'django_geosource',
-    'geostore'
+    'geostore',
 ]
 
 INTERNAL_GEOMETRY_SRID = 4326

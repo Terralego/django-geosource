@@ -44,6 +44,6 @@ class ResyncAllSourcesTestCase(TestCase):
                         side_effect=side_effect) as mocked:
             with mock.patch('django_geosource.mixins.CeleryCallMethodsMixin.update_status'):
                 with mock.patch('django_geosource.mixins.CeleryCallMethodsMixin.can_sync',
-                                new_callable=mock.PropertyMock, return_value=False) as mock_sync:
+                                new_callable=mock.PropertyMock, return_value=False):
                     call_command('resync_all_sources', force=True)
         mocked.assert_called_once()
