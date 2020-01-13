@@ -20,6 +20,7 @@ class ResyncAllSourcesTestCase(TestCase):
                         side_effect=side_effect) as mocked:
             with mock.patch('django_geosource.mixins.CeleryCallMethodsMixin.update_status', return_value=False):
                 call_command('resync_all_sources')
+        mocked.assert_called_once()
 
     def test_resync_all_sources_fail(self):
         GeoJSONSource.objects.create(
@@ -28,7 +29,7 @@ class ResyncAllSourcesTestCase(TestCase):
         )
         with mock.patch('django_geosource.mixins.CeleryCallMethodsMixin.update_status'):
             with mock.patch('django_geosource.mixins.CeleryCallMethodsMixin.can_sync',
-                            new_callable=mock.PropertyMock, return_value=False) as mock_sync:
+                            new_callable=mock.PropertyMock, return_value=False):
                 with self.assertRaisesRegexp(MethodNotAllowed,
                                              'Method "One job is still running on this source" not allowed.'):
                     call_command('resync_all_sources')
