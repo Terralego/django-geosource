@@ -16,7 +16,8 @@ class TaskTestCase(TestCase):
     def test_task_refresh_data_method(self):
         group = Group.objects.create(name="Group")
         element = GeoJSONSource.objects.create(
-            name="test", geom_type=GeometryTypes.Point.value,
+            name="test",
+            geom_type=GeometryTypes.Point.value,
             file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson'),
             settings={"groups": [group.pk]}
         )
@@ -30,7 +31,8 @@ class TaskTestCase(TestCase):
     def test_task_refresh_data_method_wrong_pk(self):
         group = Group.objects.create(name="Group")
         element = GeoJSONSource.objects.create(
-            name="test", geom_type=GeometryTypes.Point.value,
+            name="test",
+            geom_type=GeometryTypes.Point.value,
             file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson'),
             settings={"groups": [group.pk]}
         )
@@ -42,7 +44,8 @@ class TaskTestCase(TestCase):
     def test_task_wrong_method(self):
         group = Group.objects.create(name="Group")
         element = GeoJSONSource.objects.create(
-            name="test", geom_type=GeometryTypes.Point.value,
+            name="test",
+            geom_type=GeometryTypes.Point.value,
             file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson'),
             settings={"groups": [group.pk]}
         )
@@ -54,7 +57,8 @@ class TaskTestCase(TestCase):
     def test_task_good_method_error(self):
         group = Group.objects.create(name="Group")
         element = GeoJSONSource.objects.create(
-            name="test", geom_type=GeometryTypes.Point.value,
+            name="test",
+            geom_type=GeometryTypes.Point.value,
             file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson'),
             settings={"groups": [group.pk]}
         )
