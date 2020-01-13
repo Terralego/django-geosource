@@ -8,6 +8,7 @@ from enum import Enum, IntEnum, auto
 from celery.result import AsyncResult
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.gdal.error import GDALException
 from django.contrib.postgres.fields import JSONField
 from django.core.management import call_command
 from django.core.validators import RegexValidator, URLValidator
@@ -307,7 +308,7 @@ class GeoJSONSource(Source):
                         **record["properties"],
                     }
                 )
-            except ValueError:
+            except (ValueError, GDALException):
                 raise ValueError(
                     f"One of source's record has bad geometry: {record['geometry']}"
                 )
