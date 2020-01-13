@@ -1,33 +1,14 @@
 import os
 from unittest import mock
 
-from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.test import TestCase
 from rest_framework.exceptions import MethodNotAllowed
-from celery.exceptions import Ignore
 
-from django_geosource.celery.tasks import run_model_object_method
 from django_geosource.models import GeoJSONSource, GeometryTypes
-
-from geostore.models import Feature, Layer
 
 
 class ResyncAllSourcesTestCase(TestCase):
-    def test_refresh_data(self):
-        group = Group.objects.create(name="Group")
-        element = GeoJSONSource.objects.create(
-            name="test", geom_type=GeometryTypes.Point.value,
-            file=os.path.join(os.path.dirname(__file__), 'data', 'test.geojson'),
-            settings={"groups": [group.pk]}
-        )
-        with self.assertRaises(Ignore):
-            run_model_object_method(element._meta.app_label, element._meta.model_name, element.pk, 'refresh_data')
-        self.assertEqual(Layer.objects.count(), 1)
-        self.assertEqual(Feature.objects.count(), 1)
-        self.assertEqual(Feature.objects.first().properties, {'id': 1, 'test': 5})
-        self.assertEqual(Layer.objects.first().authorized_groups.first().name, "Group")
-
     def test_resync_all_sources(self):
         def side_effect(method, list, **kwargs):
             return "Task"
