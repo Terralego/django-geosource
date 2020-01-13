@@ -254,7 +254,7 @@ class ModelSourceViewsetTestCase(TestCase):
 
     @patch(
         "django_geosource.models.Source._get_records",
-        MagicMock(return_value=[{"a": "b", "c": 42, "_geom_": "POINT(0 0)"}]),
+        MagicMock(return_value=[{"a": "b", "c": 42, "d": b"4", "_geom_": "POINT(0 0)"}]),
     )
     def test_update_fields_method(self):
         obj = Source.objects.create(geom_type=10)
@@ -262,6 +262,25 @@ class ModelSourceViewsetTestCase(TestCase):
 
         self.assertEqual(FieldTypes.String.value, obj.fields.get(name="a").data_type)
         self.assertEqual(FieldTypes.Integer.value, obj.fields.get(name="c").data_type)
+        self.assertEqual(FieldTypes.Undefined.value, obj.fields.get(name="d").data_type)
+
+    @patch(
+        "django_geosource.models.Source._get_records",
+        MagicMock(return_value=[{"a": "b", "c": 42, "_geom_": "POINT(0 0)"}]),
+    )
+    def test_update_fields_with_delete_method(self):
+        obj = Source.objects.create(geom_type=10)
+        Field.objects.create(
+            source=obj,
+            name="field_name",
+            label="Label",
+            data_type=FieldTypes.String.value,
+        )
+        obj.update_fields()
+
+        self.assertEqual(FieldTypes.String.value, obj.fields.get(name="a").data_type)
+        self.assertEqual(FieldTypes.Integer.value, obj.fields.get(name="c").data_type)
+        self.assertEqual(0, Field.objects.filter(name="field_name").count())
 
     def test_ordering_filtering(self):
         obj = GeoJSONSource.objects.create(
