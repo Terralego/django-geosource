@@ -51,7 +51,5 @@ def clear_features(geosource, layer, begin_date):
 
 
 def delete_layer(geosource):
-    if geosource.layers.count() > 0:
-        raise MethodNotAllowed("No layers must be linked to this source to be deleted")
     geosource.get_layer().features.all().delete()
     return geosource.get_layer().delete()
