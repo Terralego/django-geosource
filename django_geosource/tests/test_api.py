@@ -144,7 +144,7 @@ class ModelSourceViewsetTestCase(TestCase):
 
     @patch(
         "django_geosource.serializers.PostGISSourceSerializer._first_record",
-        MagicMock(return_value={"coucou": GEOSGeometry("LINESTRING (0 0, 1 1)")}),
+        MagicMock(return_value={"foo": GEOSGeometry("LINESTRING (0 0, 1 1)")}),
     )
     @patch(
         "django_geosource.models.Source.update_fields",
@@ -169,7 +169,7 @@ class ModelSourceViewsetTestCase(TestCase):
             {**source_example, "db_password": "test_password"},
             format="json",
         )
-        source_example["geom_field"] = "coucou"
+        source_example["geom_field"] = "foo"
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertDictContainsSubset(source_example, response.json())
 
