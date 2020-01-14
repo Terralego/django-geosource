@@ -72,3 +72,15 @@ class GeostoreCallBacksTestCase(TestCase):
         layer = Layer.objects.create(name="test")
         Feature.objects.create(layer=layer, geom=GEOSGeometry("POINT (0 0)"))
         geostore_callbacks.clear_features(source, layer, layer.updated_at)
+
+    def test_delete_layer(self):
+        group = Group.objects.create(name="Group")
+        source = GeoJSONSource.objects.create(
+            name="test",
+            geom_type=GeometryTypes.Point.value,
+            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
+            settings={"groups": [group.pk]},
+        )
+        layer = Layer.objects.create(name="test")
+        Feature.objects.create(layer=layer, geom=GEOSGeometry("POINT (0 0)"))
+        geostore_callbacks.delete_layer(source)
