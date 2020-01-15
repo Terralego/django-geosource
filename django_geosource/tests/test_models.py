@@ -73,12 +73,14 @@ class MockAsyncResultFail(MockAsyncResult):
 
 class ModelSourceTestCase(TestCase):
     def setUp(self):
-        self.source = Source.objects.create(name="Toto", geom_type=GeometryTypes.Point.value)
-        self.geojson_source = GeoJSONSource.objects.create(name="Titi",
-                                                           geom_type=GeometryTypes.Point.value,
-                                                           file=os.path.join(os.path.dirname(__file__),
-                                                                             "data",
-                                                                             "test.geojson"))
+        self.source = Source.objects.create(
+            name="Toto", geom_type=GeometryTypes.Point.value
+        )
+        self.geojson_source = GeoJSONSource.objects.create(
+            name="Titi",
+            geom_type=GeometryTypes.Point.value,
+            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
+        )
 
     def test_source_str(self):
         self.assertEqual(str(self.source), "Toto - Source")
@@ -95,7 +97,9 @@ class ModelSourceTestCase(TestCase):
     def test_wrong_identifier_refresh(self):
         self.geojson_source.id_field = "wrong_identifier"
         self.geojson_source.save()
-        with self.assertRaisesRegexp(Exception, "Can't find identifier field in one or more records"):
+        with self.assertRaisesRegexp(
+            Exception, "Can't find identifier field in one or more records"
+        ):
             self.geojson_source.refresh_data()
 
     def test_delete(self):
@@ -104,18 +108,24 @@ class ModelSourceTestCase(TestCase):
         self.geojson_source.delete()
         self.assertEqual(Layer.objects.count(), 0)
 
-    @mock.patch('django_geosource.models.AsyncResult', new=MockAsyncResultSucess)
+    @mock.patch("django_geosource.models.AsyncResult", new=MockAsyncResultSucess)
     def test_get_status(self):
         self.geojson_source.task_id = 1
         self.geojson_source.save()
         self.geojson_source.get_status()
-        self.assertEqual({'state': 'ENDED', 'result': 'OK!', 'done': 'DONE'}, self.geojson_source.get_status())
+        self.assertEqual(
+            {"state": "ENDED", "result": "OK!", "done": "DONE"},
+            self.geojson_source.get_status(),
+        )
 
-    @mock.patch('django_geosource.models.AsyncResult', new=MockAsyncResultFail)
+    @mock.patch("django_geosource.models.AsyncResult", new=MockAsyncResultFail)
     def test_get_status_fail(self):
         self.geojson_source.task_id = 1
         self.geojson_source.save()
-        self.assertEqual({'state': 'ENDED', 'done': 'DONE', '1': 'NOT OK!'}, self.geojson_source.get_status())
+        self.assertEqual(
+            {"state": "ENDED", "done": "DONE", "1": "NOT OK!"},
+            self.geojson_source.get_status(),
+        )
 
 
 class ModelFieldTestCase(TestCase):
@@ -135,7 +145,7 @@ class ModelPostGISSourceTestCase(TestCase):
     def test_source_geom_attribute(self):
         self.assertEqual(self.geom_field, self.source.SOURCE_GEOM_ATTRIBUTE)
 
-    @mock.patch('psycopg2.connect', return_value=mock.Mock())
+    @mock.patch("psycopg2.connect", return_value=mock.Mock())
     def test_test_get_records(self, mock_con):
         self.source._get_records(1)
         mock_con.assert_called_once()
@@ -197,20 +207,18 @@ class ModelShapeFileSourceTestCase(TestCase):
             file=os.path.join(os.path.dirname(__file__), "data", "test.zip"),
         )
         records = source._get_records(1)
-        self.assertEqual(records[0]['NOM'], "Trifouilli-les-Oies")
-        self.assertEqual(records[0]['Insee'], 99999)
-        self.assertEqual(records[0]['_geom_'].geom_typeid, GeometryTypes.Polygon.value)
+        self.assertEqual(records[0]["NOM"], "Trifouilli-les-Oies")
+        self.assertEqual(records[0]["Insee"], 99999)
+        self.assertEqual(records[0]["_geom_"].geom_typeid, GeometryTypes.Polygon.value)
 
 
 class ModelCommandSourceTestCase(TestCase):
     def setUp(self):
         self.source = CommandSource.objects.create(
-            name="Titi",
-            geom_type=GeometryTypes.Point.value,
-            command="command_test"
+            name="Titi", geom_type=GeometryTypes.Point.value, command="command_test"
         )
 
-    @mock.patch('sys.stdout', new_callable=StringIO)
+    @mock.patch("sys.stdout", new_callable=StringIO)
     def test_refresh_data(self, mocked_stdout):
 
         self.source.refresh_data()
@@ -223,10 +231,7 @@ class ModelCommandSourceTestCase(TestCase):
 class ModelWMTSSourceTestCase(TestCase):
     def setUp(self):
         self.source = WMTSSource.objects.create(
-            name="Titi",
-            geom_type=GeometryTypes.Point.value,
-            tile_size=256,
-            minzoom=14,
+            name="Titi", geom_type=GeometryTypes.Point.value, tile_size=256, minzoom=14,
         )
 
     def test_get_records(self):

@@ -56,8 +56,7 @@ class ModelSourceViewsetTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            {'_type': "WrongSource's type is unknown"},
-            response.json(),
+            {"_type": "WrongSource's type is unknown"}, response.json(),
         )
 
     def test_list_view(self):
@@ -299,7 +298,9 @@ class ModelSourceViewsetTestCase(TestCase):
     @patch(
         "django_geosource.models.Source._get_records",
         MagicMock(
-            return_value=[{"a": "b", "c": 42, "d": b"4", "e": b"\xe8", "_geom_": "POINT(0 0)"}]
+            return_value=[
+                {"a": "b", "c": 42, "d": b"4", "e": b"\xe8", "_geom_": "POINT(0 0)"}
+            ]
         ),
     )
     def test_update_fields_method(self):

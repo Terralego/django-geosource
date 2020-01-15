@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from unittest import mock
 
 from django.test import TestCase
@@ -87,7 +87,9 @@ class GeoSourceSchedulerTestCase(TestCase):
         self.geosource_scheduler = GeosourceScheduler(celery_app, lazy=True)
 
     def test_all_entries(self):
-        self.assertEqual(['first-source'], list(self.geosource_scheduler.all_entries().keys()))
+        self.assertEqual(
+            ["first-source"], list(self.geosource_scheduler.all_entries().keys())
+        )
 
     def test_reserve(self):
         entry = SourceEntry(self.source, app=celery_app)
@@ -95,7 +97,7 @@ class GeoSourceSchedulerTestCase(TestCase):
 
     def test_schedule_with_source_should_sync(self):
         entry = SourceEntry(self.source, app=celery_app)
-        self.assertEqual({'first-source': entry}, self.geosource_scheduler.schedule)
+        self.assertEqual({"first-source": entry}, self.geosource_scheduler.schedule)
 
     def test_schedule_with_source_should_not_sync(self):
         time_s = timezone.now() + timedelta(days=1)
@@ -106,8 +108,8 @@ class GeoSourceSchedulerTestCase(TestCase):
     def test_schedule_apply_entry(self):
         entry = SourceEntry(self.source, app=celery_app)
         with mock.patch(
-                "django_geosource.mixins.CeleryCallMethodsMixin.run_async_method",
-                return_value=False,
+            "django_geosource.mixins.CeleryCallMethodsMixin.run_async_method",
+            return_value=False,
         ) as mocked:
             self.geosource_scheduler.apply_entry(entry)
         mocked.assert_called_once()
@@ -128,4 +130,6 @@ class GeoSourceSchedulerTestCase(TestCase):
             refresh=1,
             geom_type=GeometryTypes.LineString.value,
         )
-        self.assertEqual(self.geosource_scheduler.tick(), 30)   # TICK_DELAY = 60 / Number of source
+        self.assertEqual(
+            self.geosource_scheduler.tick(), 30
+        )  # TICK_DELAY = 60 / Number of source

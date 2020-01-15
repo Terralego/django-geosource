@@ -3,7 +3,6 @@ import logging
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
 from geostore.models import Layer, LayerGroup
-from rest_framework.exceptions import MethodNotAllowed
 
 
 logger = logging.getLogger(__name__)
