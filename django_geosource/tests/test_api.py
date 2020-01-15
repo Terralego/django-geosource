@@ -35,6 +35,31 @@ class ModelSourceViewsetTestCase(TestCase):
         )[0]
         self.client.force_authenticate(self.default_user)
 
+    def test_wrong_type_source_creation(self):
+        source_example = {
+            "_type": "WrongSource",
+            "name": "Test Source",
+            "db_username": "username",
+            "db_name": "dbname",
+            "db_host": "hostname.com",
+            "query": "SELECT 1",
+            "geom_field": "geom",
+            "refresh": -1,
+            "geom_type": GeometryTypes.LineString.value,
+        }
+
+        response = self.client.post(
+            reverse("geosource:geosource-list"),
+            {**source_example, "db_password": "test_password"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            {'_type': "WrongSource's type is unknown"},
+            response.json(),
+        )
+
     def test_list_view(self):
         # Create many sources and list them
         [
