@@ -326,6 +326,7 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(0, Field.objects.filter(name="field_name").count())
 
     def test_ordering_filtering(self):
+        self.source_geojson.delete()
         obj = GeoJSONSource.objects.create(
             name="foo", geom_type=GeometryTypes.Point.value,
         )
