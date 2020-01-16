@@ -34,6 +34,11 @@ class ModelSourceViewsetTestCase(TestCase):
             is_superuser=True, **{UserModel.USERNAME_FIELD: "testuser"}
         )[0]
         self.client.force_authenticate(self.default_user)
+        self.source_geojson = GeoJSONSource.objects.create(
+            name="test",
+            geom_type=GeometryTypes.Point.value,
+            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
+        )
 
     def test_wrong_type_source_creation(self):
         source_example = {
@@ -73,32 +78,22 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(Source.objects.count(), len(response.json()))
 
     def test_refresh_view_fail(self):
-        source = GeoJSONSource.objects.create(
-            name="test",
-            geom_type=GeometryTypes.Point.value,
-            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
-        )
         with patch(
             "django_geosource.mixins.CeleryCallMethodsMixin.run_async_method",
             return_value=False,
         ):
             response = self.client.get(
-                reverse("geosource:geosource-refresh", args=[source.pk])
+                reverse("geosource:geosource-refresh", args=[self.source_geojson.pk])
             )
         self.assertEqual(response.status_code, HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_refresh_view_accepted(self):
-        source = GeoJSONSource.objects.create(
-            name="test",
-            geom_type=GeometryTypes.Point.value,
-            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
-        )
         with patch(
             "django_geosource.mixins.CeleryCallMethodsMixin.run_async_method",
             return_value=True,
         ):
             response = self.client.get(
-                reverse("geosource:geosource-refresh", args=[source.pk])
+                reverse("geosource:geosource-refresh", args=[self.source_geojson.pk])
             )
         self.assertEqual(response.status_code, HTTP_202_ACCEPTED)
 
