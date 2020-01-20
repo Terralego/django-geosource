@@ -19,6 +19,7 @@ class ResyncAllSourcesTestCase(TestCase):
     def test_resync_all_sources(self):
         def side_effect(method, list, **kwargs):
             return "Task"
+
         with mock.patch(
             "django_geosource.celery.app.send_task", side_effect=side_effect
         ) as mocked:
@@ -45,6 +46,7 @@ class ResyncAllSourcesTestCase(TestCase):
     def test_resync_all_sources_fail_force(self):
         def side_effect(method, list, **kwargs):
             return "Task"
+
         with mock.patch(
             "django_geosource.celery.app.send_task", side_effect=side_effect
         ) as mocked:

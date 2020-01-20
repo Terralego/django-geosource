@@ -39,10 +39,8 @@ class ModelSourceViewsetTestCase(TestCase):
             geom_type=GeometryTypes.Point.value,
             file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
         )
-
-    def test_wrong_type_source_creation(self):
-        source_example = {
-            "_type": "WrongSource",
+        self.source_example = {
+            "_type": "PostGISSource",
             "name": "Test Source",
             "db_username": "username",
             "db_name": "dbname",
@@ -53,9 +51,11 @@ class ModelSourceViewsetTestCase(TestCase):
             "geom_type": GeometryTypes.LineString.value,
         }
 
+    def test_wrong_type_source_creation(self):
+        self.source_example["_type"] = "WrongSource"
         response = self.client.post(
             reverse("geosource:geosource-list"),
-            {**source_example, "db_password": "test_password"},
+            {**self.source_example, "db_password": "test_password"},
             format="json",
         )
 
@@ -107,26 +107,14 @@ class ModelSourceViewsetTestCase(TestCase):
     )
     @patch("django_geosource.models.Source.get_status", MagicMock(return_value={}))
     def test_postgis_source_creation(self):
-        source_example = {
-            "_type": "PostGISSource",
-            "name": "Test Source",
-            "db_username": "username",
-            "db_name": "dbname",
-            "db_host": "hostname.com",
-            "query": "SELECT 1",
-            "geom_field": "geom",
-            "refresh": -1,
-            "geom_type": GeometryTypes.LineString.value,
-        }
-
         response = self.client.post(
             reverse("geosource:geosource-list"),
-            {**source_example, "db_password": "test_password"},
+            {**self.source_example, "db_password": "test_password"},
             format="json",
         )
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        self.assertDictContainsSubset(source_example, response.json())
+        self.assertDictContainsSubset(self.source_example, response.json())
 
     @patch(
         "django_geosource.serializers.PostGISSourceSerializer._first_record",
@@ -138,21 +126,10 @@ class ModelSourceViewsetTestCase(TestCase):
     )
     @patch("django_geosource.models.Source.get_status", MagicMock(return_value={}))
     def test_postgis_source_creation_no_geom_field_wrong_geom(self):
-        source_example = {
-            "_type": "PostGISSource",
-            "name": "Test Source",
-            "db_username": "username",
-            "db_name": "dbname",
-            "db_host": "hostname.com",
-            "query": "SELECT 1",
-            "geom_field": None,
-            "refresh": -1,
-            "geom_type": GeometryTypes.LineString.value,
-        }
-
+        self.source_example["geom_field"] = None
         response = self.client.post(
             reverse("geosource:geosource-list"),
-            {**source_example, "db_password": "test_password"},
+            {**self.source_example, "db_password": "test_password"},
             format="json",
         )
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
@@ -171,26 +148,15 @@ class ModelSourceViewsetTestCase(TestCase):
     )
     @patch("django_geosource.models.Source.get_status", MagicMock(return_value={}))
     def test_postgis_source_creation_no_geom_field_good_geom(self):
-        source_example = {
-            "_type": "PostGISSource",
-            "name": "Test Source",
-            "db_username": "username",
-            "db_name": "dbname",
-            "db_host": "hostname.com",
-            "query": "SELECT 1",
-            "geom_field": None,
-            "refresh": -1,
-            "geom_type": GeometryTypes.LineString.value,
-        }
-
+        self.source_example["geom_field"] = None
         response = self.client.post(
             reverse("geosource:geosource-list"),
-            {**source_example, "db_password": "test_password"},
+            {**self.source_example, "db_password": "test_password"},
             format="json",
         )
-        source_example["geom_field"] = "foo"
+        self.source_example["geom_field"] = "foo"
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        self.assertDictContainsSubset(source_example, response.json())
+        self.assertDictContainsSubset(self.source_example, response.json())
 
     @patch(
         "django_geosource.serializers.PostGISSourceSerializer._first_record",
@@ -202,16 +168,9 @@ class ModelSourceViewsetTestCase(TestCase):
     )
     @patch("django_geosource.models.Source.get_status", MagicMock(return_value={}))
     def test_update_fields(self):
-        source = PostGISSource.objects.create(
-            name="Test Update Source",
-            db_host="localhost",
-            db_name="dbname",
-            db_username="username",
-            query="SELECT 1",
-            geom_field="geom",
-            refresh=-1,
-            geom_type=GeometryTypes.LineString.value,
-        )
+        self.source_example["name"] = "Test Update Source"
+        self.source_example.pop("_type", None)
+        source = PostGISSource.objects.create(**self.source_example)
         field = Field.objects.create(
             source=source,
             name="field_name",
@@ -256,16 +215,9 @@ class ModelSourceViewsetTestCase(TestCase):
             value.result = False
             return value
 
-        source = PostGISSource.objects.create(
-            name="Test Update Source",
-            db_host="localhost",
-            db_name="dbname",
-            db_username="username",
-            query="SELECT 1",
-            geom_field="geom",
-            refresh=-1,
-            geom_type=GeometryTypes.LineString.value,
-        )
+        self.source_example["name"] = "Test Update Source"
+        self.source_example.pop("_type", None)
+        source = PostGISSource.objects.create(**self.source_example)
         Field.objects.create(
             source=source,
             name="field_name",
