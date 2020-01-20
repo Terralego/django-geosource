@@ -2,7 +2,6 @@ import copy
 import heapq
 import logging
 from datetime import timedelta, datetime
-import traceback
 from django.utils import timezone
 
 from celery import schedules
@@ -66,9 +65,6 @@ class GeosourceScheduler(Scheduler):
 
     TICK_DELAY = 60
 
-    def __init__(self, *args, **kwargs):
-        Scheduler.__init__(self, *args, **kwargs)
-
     def all_entries(self):
         s = {}
         for source in PostGISSource.objects.exclude(refresh__lte=0).order_by(
@@ -99,23 +95,22 @@ class GeosourceScheduler(Scheduler):
 
     def should_sync(self):
         last_update = PostGISSource.objects.order_by("-updated_at").first()
-
         if not self._last_sync or (
             last_update
-            and (datetime.fromtimestamp(self._last_sync) < last_update.updated_at)
+            and (
+                timezone.make_aware(
+                    datetime.fromtimestamp(self._last_sync),
+                    timezone.get_default_timezone(),
+                )
+                < last_update.updated_at
+            )
         ):
             return True
-
         return False
 
     def apply_entry(self, entry, producer=None):
         logger.info(f"Scheduler: Sending due task {entry.source.name}")
-        try:
-            entry.run_task()
-        except Exception as exc:
-            logger.error(
-                "Message Error: %s\n%s", exc, traceback.format_stack(), exc_info=True
-            )
+        entry.run_task()
 
     def tick(
         self, event_t=event_t, min=min, heappop=heapq.heappop, heappush=heapq.heappush

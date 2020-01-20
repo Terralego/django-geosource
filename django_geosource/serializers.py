@@ -153,7 +153,7 @@ class SourceSerializer(PolymorphicModelSerializer):
 
 class PostGISSourceSerializer(SourceSerializer):
     id_field = CharField(required=False)
-    geom_field = CharField(required=False)
+    geom_field = CharField(required=False, allow_null=True)
 
     def _get_connection(self, data):
         conn = psycopg2.connect(

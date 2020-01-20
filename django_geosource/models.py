@@ -1,13 +1,12 @@
 from datetime import datetime
-from io import BytesIO
 import logging
 import json
-from os import sys
 from enum import Enum, IntEnum, auto
 
 from celery.result import AsyncResult
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.gdal.error import GDALException
 from django.contrib.postgres.fields import JSONField
 from django.core.management import call_command
 from django.core.validators import RegexValidator, URLValidator
@@ -307,7 +306,7 @@ class GeoJSONSource(Source):
                         **record["properties"],
                     }
                 )
-            except ValueError:
+            except (ValueError, GDALException):
                 raise ValueError(
                     f"One of source's record has bad geometry: {record['geometry']}"
                 )
@@ -316,6 +315,7 @@ class GeoJSONSource(Source):
 
 
 class ShapefileSource(Source):
+    # Zipped ShapeFile
     file = models.FileField(upload_to="geosource/shapefile/%Y/")
 
     def _get_records(self, limit=None):
@@ -345,9 +345,6 @@ class CommandSource(Source):
     def refresh_data(self):
         layer = self.get_layer()
         begin_date = datetime.now()
-
-        sys.stdout.encoding = None
-        sys.stdout.buffer = BytesIO()
         call_command(self.command)
 
         self.clear_features(layer, begin_date)
