@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/bin/bash
+"exec" "`dirname $0`/../venv/bin/python" "$0" "$@"  # NOQA
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
