@@ -9,15 +9,16 @@ from django_geosource.models import GeoJSONSource, GeometryTypes
 
 
 class ResyncAllSourcesTestCase(TestCase):
-    def test_resync_all_sources(self):
-        def side_effect(method, list, **kwargs):
-            return "Task"
-
+    def setUp(self):
         GeoJSONSource.objects.create(
             name="test",
             geom_type=GeometryTypes.Point.value,
             file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
         )
+
+    def test_resync_all_sources(self):
+        def side_effect(method, list, **kwargs):
+            return "Task"
         with mock.patch(
             "django_geosource.celery.app.send_task", side_effect=side_effect
         ) as mocked:
@@ -29,11 +30,6 @@ class ResyncAllSourcesTestCase(TestCase):
         mocked.assert_called_once()
 
     def test_resync_all_sources_fail(self):
-        GeoJSONSource.objects.create(
-            name="test",
-            geom_type=GeometryTypes.Point.value,
-            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
-        )
         with mock.patch("django_geosource.mixins.CeleryCallMethodsMixin.update_status"):
             with mock.patch(
                 "django_geosource.mixins.CeleryCallMethodsMixin.can_sync",
@@ -49,12 +45,6 @@ class ResyncAllSourcesTestCase(TestCase):
     def test_resync_all_sources_fail_force(self):
         def side_effect(method, list, **kwargs):
             return "Task"
-
-        GeoJSONSource.objects.create(
-            name="test",
-            geom_type=GeometryTypes.Point.value,
-            file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
-        )
         with mock.patch(
             "django_geosource.celery.app.send_task", side_effect=side_effect
         ) as mocked:
