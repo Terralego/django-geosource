@@ -22,6 +22,8 @@ from django_geosource.models import (
     FieldTypes,
     GeometryTypes,
     GeoJSONSource,
+    ShapefileSource,
+    CommandSource,
 )
 
 UserModel = get_user_model()
@@ -277,26 +279,54 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(FieldTypes.Integer.value, obj.fields.get(name="c").data_type)
         self.assertEqual(0, Field.objects.filter(name="field_name").count())
 
-    def test_ordering_filtering(self):
+    def test_ordering_filtering_search(self):
         self.source_geojson.delete()
+
         obj = GeoJSONSource.objects.create(
             name="foo", geom_type=GeometryTypes.Point.value,
+        )
+        obj2 = CommandSource.objects.create(
+            name="bar", geom_type=GeometryTypes.LineString.value,
+        )
+        ShapefileSource.objects.create(
+            name="baz", geom_type=GeometryTypes.Polygon.value,
         )
 
         list_url = reverse("geosource:geosource-list")
         response = self.client.get(list_url)
+        data = response.json()
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(len(data), 3)
         self.assertEqual(response.json()[0]["name"], obj.name)
 
-        response = self.client.get(list_url, {"ordering": "-name"})
+        # Test ordering
+        response = self.client.get(list_url, {"ordering": "name"})
         self.assertEqual(response.json()[-1]["name"], obj.name)
 
-        response = self.client.get(list_url, {"ordering": "polymorphic_ctype__model"})
+        response = self.client.get(list_url, {"ordering": "-name"})
         self.assertEqual(response.json()[0]["name"], obj.name)
 
-        response = self.client.get(
-            list_url, {"polymorphic_ctype__model": "geojsonsource"}
-        )
+        response = self.client.get(list_url, {"ordering": "polymorphic_ctype__model"})
+        self.assertEqual(response.json()[0]["name"], obj2.name)
+
+        response = self.client.get(list_url, {"ordering": "-polymorphic_ctype__model"})
+        self.assertEqual(response.json()[-1]["name"], obj2.name)
+
+        # Test filter
+        response = self.client.get(list_url, {"geom_type": GeometryTypes.Point.value})
         data = response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["name"], obj.name)
+
+        # Test search
+        response = self.client.get(list_url, {"search": "foo"})
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], obj.name)
+
+        response = self.client.get(list_url, {"search": "bar"})
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], obj2.name)
