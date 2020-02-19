@@ -72,6 +72,7 @@ def delete_layer(geosource, layer):
 Define settings you wants in `test_geosource` django project.
 
 ```sh
+docker-compose build
 docker-compose up
 ```
 
@@ -95,7 +96,7 @@ You can access to the api on http://localhost:8000/api/
 To run test suite, just launch:
 
 ```sh
-docker-compose run web ./manage.py test
+docker-compose run --rm web ./manage.py test
 ```
 
 To run test suite with coverage, execute this commande:
