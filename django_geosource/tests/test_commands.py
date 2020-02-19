@@ -51,13 +51,6 @@ class ResyncAllSourcesTestCase(TestCase):
                 call_command("resync_source", pk=self.source.id)
         mocked.assert_called_once()
 
-    def test_resync_all_sources_sync(self):
-
-        with mock.patch("django_geosource.models.GeoJSONSource.refresh_data") as mocked:
-            call_command("resync_all_sources", sync=True)
-
-        mocked.assert_called_once()
-
     def test_resync_source_sync(self):
 
         with mock.patch("django_geosource.models.GeoJSONSource.refresh_data") as mocked:

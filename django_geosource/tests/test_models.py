@@ -74,7 +74,7 @@ class MockAsyncResultFail(MockAsyncResult):
 class ModelSourceTestCase(TestCase):
     def setUp(self):
         self.source = Source.objects.create(
-            name="Toto", geom_type=GeometryTypes.Point.value
+            name="Toto", geom_type=GeometryTypes.LineString.value
         )
         self.geojson_source = GeoJSONSource.objects.create(
             name="Titi",
@@ -90,6 +90,13 @@ class ModelSourceTestCase(TestCase):
 
     def test_source_type(self):
         self.assertEqual(self.source.type, self.source.__class__)
+
+    def test_query_filter(self):
+        results = Source.objects.all()
+        self.assertEqual(len(results), 2)
+
+        results = Source.objects.filter(geom_type=GeometryTypes.LineString.value)
+        self.assertEqual(len(results), 1)
 
     def test_geojsonsource_type(self):
         self.assertEqual(self.geojson_source.type, self.geojson_source.__class__)

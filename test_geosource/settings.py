@@ -135,6 +135,7 @@ REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.OrderingFilter',
+        'rest_framework.filters.SearchFilter',
         'django_filters.rest_framework.DjangoFilterBackend',
     ]
 }
