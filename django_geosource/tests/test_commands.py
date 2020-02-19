@@ -10,7 +10,7 @@ from django_geosource.models import GeoJSONSource, GeometryTypes
 
 class ResyncAllSourcesTestCase(TestCase):
     def setUp(self):
-        GeoJSONSource.objects.create(
+        self.source = GeoJSONSource.objects.create(
             name="test",
             geom_type=GeometryTypes.Point.value,
             file=os.path.join(os.path.dirname(__file__), "data", "test.geojson"),
@@ -28,6 +28,41 @@ class ResyncAllSourcesTestCase(TestCase):
                 return_value=False,
             ):
                 call_command("resync_all_sources")
+        mocked.assert_called_once()
+
+    def test_resync_all_sources_sync(self):
+
+        with mock.patch("django_geosource.models.GeoJSONSource.refresh_data") as mocked:
+            call_command("resync_all_sources", sync=True)
+
+        mocked.assert_called_once()
+
+    def test_resync_source(self):
+        def side_effect(method, list, **kwargs):
+            return "Task"
+
+        with mock.patch(
+            "django_geosource.celery.app.send_task", side_effect=side_effect
+        ) as mocked:
+            with mock.patch(
+                "django_geosource.mixins.CeleryCallMethodsMixin.update_status",
+                return_value=False,
+            ):
+                call_command("resync_source", pk=self.source.id)
+        mocked.assert_called_once()
+
+    def test_resync_all_sources_sync(self):
+
+        with mock.patch("django_geosource.models.GeoJSONSource.refresh_data") as mocked:
+            call_command("resync_all_sources", sync=True)
+
+        mocked.assert_called_once()
+
+    def test_resync_source_sync(self):
+
+        with mock.patch("django_geosource.models.GeoJSONSource.refresh_data") as mocked:
+            call_command("resync_source", pk=self.source.id, sync=True)
+
         mocked.assert_called_once()
 
     def test_resync_all_sources_fail(self):
