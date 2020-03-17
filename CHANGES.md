@@ -1,3 +1,11 @@
+
+0.3.7 / 2020-03-17
+==================
+
+  * Enhance tests to valide search and filter
+  * Add option to sync sources to have more control
+  * Add zipfile shapefilesource
+
 0.3.6       (2019-12-19)
 ------------------------
 
