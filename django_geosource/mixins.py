@@ -1,11 +1,10 @@
 from datetime import timedelta
 from django.utils.timezone import now
-from django_geosource.celery.tasks import run_model_object_method
+from django_geosource.tasks import run_model_object_method
 from rest_framework.exceptions import MethodNotAllowed
 from celery import states
 
 from .app_settings import MAX_TASK_RUNTIME
-from .celery import app as celery_app
 
 
 class CeleryCallMethodsMixin:
@@ -35,9 +34,12 @@ class CeleryCallMethodsMixin:
         `force` argument.
         """
         if self.can_sync or force:
-            task_job = celery_app.send_task(
-                "django_geosource.celery.tasks.run_model_object_method",
-                (self._meta.app_label, self.__class__.__name__, self.pk, method),
+            task_job = run_model_object_method.delay(
+                self._meta.app_label,
+                self.__class__.__name__,
+                self.pk,
+                method,
+                success_state,
             )
 
             self.update_status(task_job)

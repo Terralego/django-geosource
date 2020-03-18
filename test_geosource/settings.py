@@ -145,4 +145,4 @@ GEOSOURCE_FEATURE_CALLBACK = 'django_geosource.geostore_callbacks.feature_callba
 GEOSOURCE_CLEAN_FEATURE_CALLBACK = 'django_geosource.geostore_callbacks.clear_features'
 GEOSOURCE_DELETE_LAYER_CALLBACK = 'django_geosource.geostore_callbacks.delete_layer'
 
-CELERY_ALWAYS_EAGER = True
+CELERY_TASK_ALWAYS_EAGER = True
