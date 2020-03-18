@@ -18,7 +18,8 @@ import psycopg2
 from psycopg2 import sql
 
 from .callbacks import get_attr_from_path
-from .celery import app as celery_app
+
+# from .celery import app as celery_app
 from .fields import LongURLField
 from .mixins import CeleryCallMethodsMixin
 from .signals import refresh_data_done
@@ -197,7 +198,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         response = {}
 
         if self.task_id:
-            task = AsyncResult(self.task_id, app=celery_app)
+            task = AsyncResult(self.task_id)
             response = {"state": task.state, "done": task.date_done}
 
             if task.successful():

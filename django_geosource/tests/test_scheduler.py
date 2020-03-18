@@ -4,10 +4,10 @@ from unittest import mock
 from django.test import TestCase
 from django.utils import timezone
 
-from django_geosource.celery.schedulers import GeosourceScheduler, SourceEntry
+from django_geosource.schedulers import GeosourceScheduler, SourceEntry
 from django_geosource.models import PostGISSource, GeometryTypes
 
-from django_geosource.celery import app as celery_app
+from test_geosource.celery import app as celery_app
 
 from rest_framework.exceptions import MethodNotAllowed
 
