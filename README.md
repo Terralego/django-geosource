@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/Terralego/django-geosource/branch/master/graph/badge.svg)](https://codecov.io/gh/Terralego/django-geosource)
 [![PyPi version](https://pypip.in/v/django-geosource/badge.png)](https://pypi.org/project/django-geosource/)
 
-# Django GEOSource
+# Django GeoSource
 
 This django application provide a Rest Framework API that allow to manage many geo data
 sources and integrate that data wherever you need, like a Django model or any output
@@ -76,8 +76,7 @@ docker-compose build
 docker-compose up
 ```
 
-First start should failed as the database need to be initialized. Just launch
-the same command twice.
+First start should failed as the database need to be initialized. Just launch the same command twice.
 
 Then initialize the database:
 
