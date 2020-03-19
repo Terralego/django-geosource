@@ -1,4 +1,9 @@
 
+0.4.0 / 2020-03-19
+==================
+
+  * BREAKING CHANGE : change way celery is working to allow using celery in another app
+
 0.3.7 / 2020-03-17
 ==================
 
@@ -6,44 +11,44 @@
   * Add option to sync sources to have more control
   * Add zipfile shapefilesource
 
-0.3.6       (2019-12-19)
-------------------------
+0.3.6 / 2019-12-19
+==================
 
-* Fix bug with FileSourceSerializer
+  * Fix bug with FileSourceSerializer
 
-0.3.5       (2019-12-18)
-------------------------
+0.3.5 / 2019-12-18
+==================
 
-* Add ordering and filtering for sources
-* Add flake8 linting to CI
+  * Add ordering and filtering for sources
+  * Add flake8 linting to CI
 
-0.3.4      (2019-12-16)
------------------------
-
-### Improves
-
-* Improve documentation
-* Fix python3.8, django 3.0 and DRF 3.11 compatibility
-
-0.3.3      (2019-11-06)
------------------------
+0.3.4 / 2019-12-16
+==================
 
 ### Improves
 
-* Define MANIFEST.in
+  * Improve documentation
+  * Fix python3.8, django 3.0 and DRF 3.11 compatibility
 
-0.3.1      (2019-11-06)
------------------------
+0.3.3 / 2019-11-06
+==================
 
 ### Improves
 
-* Improve error message when identifier field is not found in the source
-* Improve error message when geojson features has bad geometries
-* Use black for linting in pipelines
+  * Define MANIFEST.in
 
-0.3.0      (2019-10-18)
------------------------
+0.3.1 / 2019-11-06
+==================
+
+### Improves
+
+  * Improve error message when identifier field is not found in the source
+  * Improve error message when geojson features has bad geometries
+  * Use black for linting in pipelines
+
+0.3.0 / 2019-10-18
+==================
 
 ### Release
 
-* First release
+  * First release
