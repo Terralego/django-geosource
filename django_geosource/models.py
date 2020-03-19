@@ -18,6 +18,7 @@ from polymorphic.models import PolymorphicModel
 from psycopg2 import sql
 
 from .callbacks import get_attr_from_path
+
 # from .celery import app as celery_app
 from .fields import LongURLField
 from .mixins import CeleryCallMethodsMixin

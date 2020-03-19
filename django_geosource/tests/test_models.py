@@ -4,9 +4,16 @@ from io import StringIO
 from unittest import mock
 
 from django.test import TestCase
-from django_geosource.models import (CommandSource, Field, GeoJSONSource,
-                                     GeometryTypes, PostGISSource,
-                                     ShapefileSource, Source, WMTSSource)
+from django_geosource.models import (
+    CommandSource,
+    Field,
+    GeoJSONSource,
+    GeometryTypes,
+    PostGISSource,
+    ShapefileSource,
+    Source,
+    WMTSSource,
+)
 from geostore.models import Layer
 
 
