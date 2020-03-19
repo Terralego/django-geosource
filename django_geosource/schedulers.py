@@ -1,11 +1,11 @@
 import copy
 import heapq
 import logging
-from datetime import timedelta, datetime
-from django.utils import timezone
+from datetime import datetime, timedelta
 
 from celery import schedules
-from celery.beat import Scheduler, ScheduleEntry, event_t
+from celery.beat import ScheduleEntry, Scheduler, event_t
+from django.utils import timezone
 from django_geosource.models import PostGISSource
 
 logger = logging.getLogger(__name__)

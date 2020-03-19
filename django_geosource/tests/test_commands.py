@@ -3,9 +3,8 @@ from unittest import mock
 
 from django.core.management import call_command
 from django.test import TestCase
-from rest_framework.exceptions import MethodNotAllowed
-
 from django_geosource.models import GeoJSONSource, GeometryTypes
+from rest_framework.exceptions import MethodNotAllowed
 
 
 def side_effect(method, list, **kwargs):

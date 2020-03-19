@@ -1,5 +1,4 @@
 from django.core.management import BaseCommand
-
 from django_geosource.models import Source
 
 

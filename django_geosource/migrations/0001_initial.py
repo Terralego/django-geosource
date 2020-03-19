@@ -2,10 +2,10 @@
 
 import django.contrib.postgres.fields.jsonb
 import django.core.validators
-from django.db import migrations, models
 import django.db.models.deletion
 import django_geosource.mixins
 import django_geosource.models
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):

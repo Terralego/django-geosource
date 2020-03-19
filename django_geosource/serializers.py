@@ -1,28 +1,15 @@
 from os.path import basename
 
+import psycopg2
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import transaction
-import psycopg2
 from psycopg2 import sql
-from rest_framework.serializers import (
-    CharField,
-    IntegerField,
-    ModelSerializer,
-    SerializerMethodField,
-    SlugField,
-    ValidationError,
-)
+from rest_framework.serializers import (CharField, IntegerField,
+                                        ModelSerializer, SerializerMethodField,
+                                        SlugField, ValidationError)
 
-from .models import (
-    CommandSource,
-    GeoJSONSource,
-    GeometryTypes,
-    PostGISSource,
-    ShapefileSource,
-    Source,
-    Field,
-    WMTSSource,
-)
+from .models import (CommandSource, Field, GeoJSONSource, GeometryTypes,
+                     PostGISSource, ShapefileSource, Source, WMTSSource)
 
 
 class PolymorphicModelSerializer(ModelSerializer):
