@@ -1,12 +1,11 @@
-from unittest import mock
 import os
-from django.test import TestCase
+from unittest import mock
 
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
+from django.test import TestCase
 from django_geosource import geostore_callbacks
 from django_geosource.models import GeoJSONSource, GeometryTypes
-
 from geostore.models import Feature, Layer
 
 

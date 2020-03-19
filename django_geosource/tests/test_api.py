@@ -6,25 +6,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED,
-    HTTP_202_ACCEPTED,
-    HTTP_400_BAD_REQUEST,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-)
+from django_geosource.models import (CommandSource, Field, FieldTypes,
+                                     GeoJSONSource, GeometryTypes,
+                                     PostGISSource, ShapefileSource, Source)
+from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED,
+                                   HTTP_202_ACCEPTED, HTTP_400_BAD_REQUEST,
+                                   HTTP_500_INTERNAL_SERVER_ERROR)
 from rest_framework.test import APIClient
-
-from django_geosource.models import (
-    PostGISSource,
-    Source,
-    Field,
-    FieldTypes,
-    GeometryTypes,
-    GeoJSONSource,
-    ShapefileSource,
-    CommandSource,
-)
 
 UserModel = get_user_model()
 

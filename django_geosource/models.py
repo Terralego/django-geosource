@@ -1,24 +1,23 @@
-from datetime import datetime
-import logging
 import json
+import logging
+from datetime import datetime
 from enum import Enum, IntEnum, auto
 
+import fiona
+import psycopg2
 from celery.result import AsyncResult
 from django.conf import settings
-from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.gdal.error import GDALException
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import JSONField
 from django.core.management import call_command
 from django.core.validators import RegexValidator, URLValidator
 from django.db import models, transaction
 from django.utils.text import slugify
-import fiona
 from polymorphic.models import PolymorphicModel
-import psycopg2
 from psycopg2 import sql
 
 from .callbacks import get_attr_from_path
-
 # from .celery import app as celery_app
 from .fields import LongURLField
 from .mixins import CeleryCallMethodsMixin

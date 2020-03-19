@@ -1,13 +1,11 @@
-import os
 import logging
+import os
 from unittest import mock
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
-
-from django_geosource.tasks import run_model_object_method
 from django_geosource.models import GeoJSONSource, GeometryTypes
-
+from django_geosource.tasks import run_model_object_method
 from geostore.models import Feature, Layer
 
 
