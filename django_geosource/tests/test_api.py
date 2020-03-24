@@ -159,6 +159,22 @@ class ModelSourceViewsetTestCase(TestCase):
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertDictContainsSubset(self.source_example, response.json())
 
+    def test_wmts_source_creation(self):
+
+        wmts_source = {
+            "_type": "WMTSSource",
+            "name": "Test Source",
+            "url": "http://fakeurl.com/",
+            "tile_size": 256,
+        }
+
+        response = self.client.post(
+            reverse("geosource:geosource-list"), {**wmts_source}, format="json",
+        )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertDictContainsSubset(wmts_source, response.json())
+
     @patch(
         "django_geosource.serializers.PostGISSourceSerializer._first_record",
         MagicMock(return_value={"geom": GEOSGeometry("POINT (0 0)")}),

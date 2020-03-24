@@ -75,6 +75,7 @@ class GeometryTypes(IntEnum):
     MultiLineString = 5
     MultiPolygon = 6
     GeometryCollection = 7
+    Undefined = 8
 
     @classmethod
     def choices(cls):

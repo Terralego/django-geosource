@@ -254,8 +254,11 @@ class CommandSourceSerializer(SourceSerializer):
 
 
 class WMTSSourceSerialize(SourceSerializer):
-    minzoom = IntegerField(min_value=0, max_value=24, allow_null=True)
-    maxzoom = IntegerField(min_value=0, max_value=24, allow_null=True)
+    minzoom = IntegerField(min_value=0, max_value=24, allow_null=True, default=0)
+    maxzoom = IntegerField(min_value=0, max_value=24, allow_null=True, default=24)
+    geom_type = CharField(
+        required=False, allow_null=True, default=GeometryTypes.Undefined.value
+    )
 
     class Meta:
         model = WMTSSource
