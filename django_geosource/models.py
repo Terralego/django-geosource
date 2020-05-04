@@ -8,7 +8,6 @@ import psycopg2
 import pyexcel
 from celery.result import AsyncResult
 from django.conf import settings
-from django.contrib.gis.db import models as geomodels
 from django.contrib.gis.gdal.error import GDALException
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import JSONField
@@ -378,19 +377,26 @@ class WMTSSource(Source):
 
 
 class CSVSource(Source):
-    SEPARATORS = (
-        ('coma', ','),
-        ('semi-colon', ';'),
-        ('tabulation', '\t'),
-        ('space', ' '),
-        ('column', ':'),
-    )
+    COMA = ('coma', ',')
+    SEMI_COLON = ('semicolon', ';')
+    TAB = ('tabulation', '\t')
+    SPACE = ('space', ' ')
+    COLUMN = ('column', ' ')
+    QUOTATION_MARK = ('quotationmark', '"')
+    POINT = ('point', '.')
+
+    SEPARATORS = (COMA, SEMI_COLON, TAB, SPACE, COLUMN)
+    DECIMAL_SEPARATORS = (COMA, SEMI_COLON, POINT, SPACE)
+    DELIMITERS = (QUOTATION_MARK,)
 
     file = models.FileField(upload_to="geosource/csv/%Y")
-    encoding = models.CharField(max_length=100)
-    separator = models.CharField(max_length=100, choices=SEPARATORS, default=',')
-    delimiter = models.CharField(max_length=100)
-    coordinates = geomodels.PointField()
+    encoding_field = models.CharField(max_length=100)
+    decimal_separator_field = models.CharField(max_length=100, choices=DECIMAL_SEPARATORS, default=POINT[1])
+    separator_field = models.CharField(max_length=100, choices=SEPARATORS, default=SEMI_COLON[1])
+    delimiter_field = models.CharField(max_length=100, choices=DELIMITERS, default=QUOTATION_MARK[1])
+    longitude_field = models.FloatField()
+    latitude_field = models.FloatField()
+    number_lines_to_ignore_field = models.PositiveIntegerField()
 
     def get_file_as_sheet(self):
         try:
