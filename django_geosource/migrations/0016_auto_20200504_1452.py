@@ -8,32 +8,83 @@ import django_geosource.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0015_auto_20190927_1445'),
+        ("django_geosource", "0015_auto_20190927_1445"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CSVSource',
+            name="CSVSource",
             fields=[
-                ('source_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='django_geosource.Source')),
-                ('file', models.FileField(upload_to='geosource/csv/%Y')),
-                ('encoding_field', models.CharField(max_length=100)),
-                ('decimal_separator_field', models.CharField(choices=[('coma', ','), ('semicolon', ';'), ('point', '.'), ('space', ' ')], default='.', max_length=100)),
-                ('separator_field', models.CharField(choices=[('coma', ','), ('semicolon', ';'), ('tabulation', '\t'), ('space', ' '), ('column', ' ')], default=';', max_length=100)),
-                ('delimiter_field', models.CharField(choices=[('quotationmark', '"')], default='"', max_length=100)),
-                ('longitude_field', models.FloatField()),
-                ('latitude_field', models.FloatField()),
-                ('number_lines_to_ignore_field', models.PositiveIntegerField(default=0)),
+                (
+                    "source_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="django_geosource.Source",
+                    ),
+                ),
+                ("file", models.FileField(upload_to="geosource/csv/%Y")),
+                ("encoding_field", models.CharField(max_length=100)),
+                (
+                    "decimal_separator_field",
+                    models.CharField(
+                        choices=[
+                            ("coma", ","),
+                            ("semicolon", ";"),
+                            ("point", "."),
+                            ("space", " "),
+                        ],
+                        default=".",
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "separator_field",
+                    models.CharField(
+                        choices=[
+                            ("coma", ","),
+                            ("semicolon", ";"),
+                            ("tabulation", "\t"),
+                            ("space", " "),
+                            ("column", " "),
+                        ],
+                        default=";",
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "delimiter_field",
+                    models.CharField(
+                        choices=[("quotationmark", '"')], default='"', max_length=100
+                    ),
+                ),
+                ("longitude_field", models.FloatField()),
+                ("latitude_field", models.FloatField()),
+                (
+                    "number_lines_to_ignore_field",
+                    models.PositiveIntegerField(default=0),
+                ),
             ],
-            options={
-                'abstract': False,
-                'base_manager_name': 'objects',
-            },
-            bases=('django_geosource.source',),
+            options={"abstract": False, "base_manager_name": "objects",},
+            bases=("django_geosource.source",),
         ),
         migrations.AlterField(
-            model_name='source',
-            name='geom_type',
-            field=models.IntegerField(choices=[(0, django_geosource.models.GeometryTypes['Point']), (1, django_geosource.models.GeometryTypes['LineString']), (3, django_geosource.models.GeometryTypes['Polygon']), (4, django_geosource.models.GeometryTypes['MultiPoint']), (5, django_geosource.models.GeometryTypes['MultiLineString']), (6, django_geosource.models.GeometryTypes['MultiPolygon']), (7, django_geosource.models.GeometryTypes['GeometryCollection']), (8, django_geosource.models.GeometryTypes['Undefined'])]),
+            model_name="source",
+            name="geom_type",
+            field=models.IntegerField(
+                choices=[
+                    (0, django_geosource.models.GeometryTypes["Point"]),
+                    (1, django_geosource.models.GeometryTypes["LineString"]),
+                    (3, django_geosource.models.GeometryTypes["Polygon"]),
+                    (4, django_geosource.models.GeometryTypes["MultiPoint"]),
+                    (5, django_geosource.models.GeometryTypes["MultiLineString"]),
+                    (6, django_geosource.models.GeometryTypes["MultiPolygon"]),
+                    (7, django_geosource.models.GeometryTypes["GeometryCollection"]),
+                    (8, django_geosource.models.GeometryTypes["Undefined"]),
+                ]
+            ),
         ),
     ]

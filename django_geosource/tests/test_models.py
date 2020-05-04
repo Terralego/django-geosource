@@ -254,7 +254,9 @@ class ModelWMTSSourceTestCase(TestCase):
 class ModelCSVSourceTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.source_name = os.path.join(settings.BASE_DIR, 'django_geosource', 'tests', 'source.csv')
+        cls.source_name = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source.csv"
+        )
         cls.source = CSVSource.objects.create(
             file=cls.source_name,
             geom_type=8,
