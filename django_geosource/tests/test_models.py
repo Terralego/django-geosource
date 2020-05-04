@@ -3,9 +3,11 @@ import os
 from io import StringIO
 from unittest import mock
 
+from django.conf import settings
 from django.test import TestCase
 from django_geosource.models import (
     CommandSource,
+    CSVSource,
     Field,
     GeoJSONSource,
     GeometryTypes,
@@ -247,3 +249,19 @@ class ModelWMTSSourceTestCase(TestCase):
 
     def test_refresh_data(self):
         self.assertEqual({}, self.source.refresh_data())
+
+
+class ModelCSVSourceTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.source_name = os.path.join(settings.BASE_DIR, 'django_geosource', 'tests', 'source.csv')
+        cls.source = CSVSource.objects.create(
+            file=cls.source_name,
+            geom_type=8,
+            longitude_field=42.2222,
+            latitude_field=4.2222,
+        )
+
+    def test_get_records(self):
+        records = self.source._get_records()
+        self.assertEqual(len(records), 6, len(records))
