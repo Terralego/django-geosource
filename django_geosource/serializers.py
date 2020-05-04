@@ -267,6 +267,10 @@ class WMTSSourceSerialize(SourceSerializer):
 
 
 class CSVSourceSerializer(FileSourceSerializer):
+    decimal_separator_field = CharField(source="get_decimal_separator_field_display")
+    separator_field = CharField(source="get_separator_field_display")
+    delimiter_field = CharField(source="get_delimiter_field_display")
+
     class Meta:
         model = CSVSource
         fields = "__all__"
