@@ -15,6 +15,7 @@ from rest_framework.serializers import (
 
 from .models import (
     CommandSource,
+    CSVSource,
     Field,
     GeoJSONSource,
     GeometryTypes,
@@ -263,3 +264,10 @@ class WMTSSourceSerialize(SourceSerializer):
     class Meta:
         model = WMTSSource
         fields = "__all__"
+
+
+class CSVSourceSerializer(FileSourceSerializer):
+    class Meta:
+        model = CSVSource
+        fields = "__all__"
+        extra_kwargs = {"file": {"write_only": True}}

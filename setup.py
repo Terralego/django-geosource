@@ -50,7 +50,8 @@ setup(
         "celery",
         "psycopg2",
         "Fiona",
+        "pyexcel",
     ],
     tests_require=test_require,
-    extras_require={"dev": test_require,},
+    extras_require={"dev": test_require, },
 )
