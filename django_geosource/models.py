@@ -396,14 +396,15 @@ class CSVSource(Source):
     delimiter_field = models.CharField(max_length=100, choices=DELIMITERS, default=QUOTATION_MARK[1])
     longitude_field = models.FloatField()
     latitude_field = models.FloatField()
-    number_lines_to_ignore_field = models.PositiveIntegerField()
+    number_lines_to_ignore_field = models.PositiveIntegerField(default=0)
 
     def get_file_as_sheet(self):
-        try:
-            return pyexcel.get_sheet(file_type="csv", content=self.file, delimiter=self.separator)
-        except pyexcel.FileTypeNotSupported:
-            logger.info("Source's CSV file is not valid")
-            raise
+        with open(self.file.name, 'r') as f:
+            try:
+                return pyexcel.get_sheet(file_type="csv", file_content=f, delimiter=self.separator_field)
+            except pyexcel.exceptions.FileTypeNotSupported:
+                logger.info("Source's CSV file is not valid")
+                raise
 
     def _get_records(self, limit=None):
         sheet = self.get_file_as_sheet()
