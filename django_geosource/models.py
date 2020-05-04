@@ -377,13 +377,13 @@ class WMTSSource(Source):
 
 
 class CSVSource(Source):
-    COMA = ('coma', ',')
-    SEMI_COLON = ('semicolon', ';')
-    TAB = ('tabulation', '\t')
-    SPACE = ('space', ' ')
-    COLUMN = ('column', ' ')
-    QUOTATION_MARK = ('quotationmark', '"')
-    POINT = ('point', '.')
+    COMA = ("coma", ",")
+    SEMI_COLON = ("semicolon", ";")
+    TAB = ("tabulation", "\t")
+    SPACE = ("space", " ")
+    COLUMN = ("column", " ")
+    QUOTATION_MARK = ("quotationmark", '"')
+    POINT = ("point", ".")
 
     SEPARATORS = (COMA, SEMI_COLON, TAB, SPACE, COLUMN)
     DECIMAL_SEPARATORS = (COMA, SEMI_COLON, POINT, SPACE)
@@ -391,17 +391,25 @@ class CSVSource(Source):
 
     file = models.FileField(upload_to="geosource/csv/%Y")
     encoding_field = models.CharField(max_length=100)
-    decimal_separator_field = models.CharField(max_length=100, choices=DECIMAL_SEPARATORS, default=POINT[1])
-    separator_field = models.CharField(max_length=100, choices=SEPARATORS, default=SEMI_COLON[1])
-    delimiter_field = models.CharField(max_length=100, choices=DELIMITERS, default=QUOTATION_MARK[1])
+    decimal_separator_field = models.CharField(
+        max_length=100, choices=DECIMAL_SEPARATORS, default=POINT[1]
+    )
+    separator_field = models.CharField(
+        max_length=100, choices=SEPARATORS, default=SEMI_COLON[1]
+    )
+    delimiter_field = models.CharField(
+        max_length=100, choices=DELIMITERS, default=QUOTATION_MARK[1]
+    )
     longitude_field = models.FloatField()
     latitude_field = models.FloatField()
     number_lines_to_ignore_field = models.PositiveIntegerField(default=0)
 
     def get_file_as_sheet(self):
-        with open(self.file.name, 'r') as f:
+        with open(self.file.name, "r") as f:
             try:
-                return pyexcel.get_sheet(file_type="csv", file_content=f, delimiter=self.separator_field)
+                return pyexcel.get_sheet(
+                    file_type="csv", file_content=f, delimiter=self.separator_field
+                )
             except pyexcel.exceptions.FileTypeNotSupported:
                 logger.info("Source's CSV file is not valid")
                 raise
