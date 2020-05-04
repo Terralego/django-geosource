@@ -5,8 +5,10 @@ from enum import Enum, IntEnum, auto
 
 import fiona
 import psycopg2
+import pyexcel
 from celery.result import AsyncResult
 from django.conf import settings
+from django.contrib.gis.db import models as geomodels
 from django.contrib.gis.gdal.error import GDALException
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import JSONField
@@ -46,7 +48,7 @@ class FieldTypes(Enum):
     Boolean = auto()
     Undefined = auto()
 
-    def _generate_next_value_(name, start, count, last_values):
+    def _generate_next_value_(self, name, start, count, last_values):
         return name.lower()
 
     @classmethod
@@ -373,3 +375,37 @@ class WMTSSource(Source):
 
     def _get_records(self, limit=None):
         return []
+
+
+class CSVSource(Source):
+    SEPARATORS = (
+        ('coma', ','),
+        ('semi-colon', ';'),
+        ('tabulation', '\t'),
+        ('space', ' '),
+        ('column', ':'),
+    )
+
+    file = models.FileField(upload_to="geosource/csv/%Y")
+    encoding = models.CharField(max_length=100)
+    separator = models.CharField(max_length=100, choices=SEPARATORS, default=',')
+    delimiter = models.CharField(max_length=100)
+    coordinates = geomodels.PointField()
+
+    def get_file_as_sheet(self):
+        try:
+            return pyexcel.get_sheet(file_type="csv", content=self.file, delimiter=self.separator)
+        except pyexcel.FileTypeNotSupported:
+            logger.info("Source's CSV file is not valid")
+            raise
+
+    def _get_records(self, limit=None):
+        sheet = self.get_file_as_sheet()
+        sheet.name_columns_by_row(0)
+
+        limit = limit if limit else len(sheet)
+
+        records = []
+        for row in sheet:
+            records.append({name: value for name, value in zip(sheet.colnames, row)})
+        return records
