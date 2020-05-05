@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
                     models.PositiveIntegerField(default=0),
                 ),
             ],
-            options={"abstract": False, "base_manager_name": "objects", },
+            options={"abstract": False, "base_manager_name": "objects"},
             bases=("django_geosource.source",),
         ),
         migrations.AlterField(
