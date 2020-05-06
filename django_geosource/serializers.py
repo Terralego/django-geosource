@@ -8,6 +8,7 @@ from psycopg2 import sql
 from rest_framework.serializers import (
     BooleanField,
     CharField,
+    ChoiceField,
     IntegerField,
     ModelSerializer,
     SerializerMethodField,
@@ -269,9 +270,9 @@ class WMTSSourceSerialize(SourceSerializer):
 
 
 class CSVSourceSerializer(FileSourceSerializer):
-    scr = CharField(required=True)
+    coordinate_reference_system = CharField(required=True)
     encoding = CharField(required=True)
-    separator = CharField(required=True)
+    field_separator = CharField(required=True)
     decimal_separator = CharField(required=True)
     char_delimiter = CharField(required=True)
     coordinates_field = CharField(required=True)
@@ -283,6 +284,9 @@ class CSVSourceSerializer(FileSourceSerializer):
     longlat_field = CharField(required=False)
     coordinates_field_count = CharField(required=False)
     coordinates_separtor = CharField(required=False)
+    geom_type = ChoiceField(
+        default=GeometryTypes.Point.value, choices=GeometryTypes.choices()
+    )
 
     class Meta:
         model = CSVSource
@@ -295,9 +299,11 @@ class CSVSourceSerializer(FileSourceSerializer):
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)
         validated_data["settings"] = {
-            "scr": validated_data.pop("scr"),
+            "coordinate_reference_system": validated_data.pop(
+                "coordinate_reference_system"
+            ),
             "encoding": validated_data.pop("encoding"),
-            "separator": validated_data.pop("separator"),
+            "field_separator": validated_data.pop("field_separator"),
             "decimal_separator": validated_data.pop("decimal_separator"),
             "char_delimiter": validated_data.pop("char_delimiter"),
             "coordinates_field": validated_data.get("coordinates_field"),
@@ -320,38 +326,38 @@ class CSVSourceSerializer(FileSourceSerializer):
                     "longitude_field": validated_data.pop("longitude_field"),
                 }
             )
-        validated_data.pop('coordinates_field')
+        validated_data.pop("coordinates_field")
         return validated_data
 
     def validate(self, data):
         validated_data = super().validate(data)
-        if data['settings']["coordinates_field"] == "one_column":
-            if not data['settings'].get("longlat_field"):
+        if data["settings"]["coordinates_field"] == "one_column":
+            if not data["settings"].get("longlat_field"):
                 raise ValidationError(
                     _(
                         "longlat_field must be defined when coordinates are set to one column"
                     )
                 )
-            if not data['settings'].get("coordinates_order"):
+            if not data["settings"].get("coordinates_order"):
                 raise ValidationError(
                     _(
                         "Coordinates order must be specified when coordinates are set to one column"
                     )
                 )
-            if not data['settings'].get("coordinates_separtor"):
+            if not data["settings"].get("coordinates_separtor"):
                 raise ValidationError(
                     _(
                         "Coordinates separator must be specified when coordinates are set to one column"
                     )
                 )
-        elif data['settings']["coordinates_field"] == "two_columns":
-            if not data['settings'].get("latitude_field"):
+        elif data["settings"]["coordinates_field"] == "two_columns":
+            if not data["settings"].get("latitude_field"):
                 raise ValidationError(
                     _(
                         "Latitude field must be specified when coordinates are set to two columns"
                     )
                 )
-            if not data['settings'].get("longitude_field"):
+            if not data["settings"].get("longitude_field"):
                 raise ValidationError(
                     _(
                         "Longitude field must be specified when coordinates are set to two columns"

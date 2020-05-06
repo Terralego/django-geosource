@@ -262,8 +262,8 @@ class ModelCSVSourceTestCase(TestCase):
             geom_type=8,
             settings={
                 "encoding": "UTF-8",
-                "scr": "EPSG_4326",
-                "separator": "semicolon",
+                "coordinate_reference_system": "EPSG_4326",
+                "field_separator": "semicolon",
                 "decimal_separator": "coma",
                 "header": True,
                 "coordinates_field": "two_columns",

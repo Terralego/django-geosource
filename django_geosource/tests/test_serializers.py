@@ -12,11 +12,11 @@ class CSVSourceSerializerTestCase(TestCase):
     def setUpTestData(cls):
         cls.settings_data = {
             "encoding": "UTF-8",
-            "scr": "EPSG_4326",
+            "coordinate_reference_system": "EPSG_4326",
             "coordinates_field": "two_columns",
             "latitude_field": "lat",
             "longitude_field": "long",
-            "separator": "semicolon",
+            "field_separator": "semicolon",
             "decimal_separator": "coma",
             "char_delimiter": "doublequote",
             "number_lines_to_ignore": 0,
@@ -31,7 +31,6 @@ class CSVSourceSerializerTestCase(TestCase):
         csv = SimpleUploadedFile(name="test.csv", content=b"some content")
         data = {
             "file": [csv],
-            "geom_type": 8,
             "_type": "CSVSource",
             "name": "test",
             **self.settings_data,
@@ -46,14 +45,17 @@ class CSVSourceSerializerTestCase(TestCase):
         csv = SimpleUploadedFile(name="test.csv", content=b"some content")
         data = {
             "file": csv,
-            "geom_type": 8,
+            "geom_type": 0,
             "name": "test",
-            'settings': self.settings_data,
+            "settings": self.settings_data,
         }
         csv_source = CSVSource.objects.create(**data)
         serializer = CSVSourceSerializer(csv_source)
-        self.assertIsNone(serializer.data.get('settings'))
+        self.assertIsNone(serializer.data.get("settings"))
 
         # assert at least one of the settings element is at root level in serializer data
         # if it works for one, it works for all the other
-        self.assertEqual(serializer.data.get('scr'), csv_source.settings['scr'])
+        self.assertEqual(
+            serializer.data.get("coordinate_reference_system"),
+            csv_source.settings["coordinate_reference_system"],
+        )
