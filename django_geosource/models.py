@@ -464,3 +464,56 @@ class CSVSource(Source):
             "point": ".",
         }
         return SEPARATORS[name]
+
+    # properties are use by serializer for representation (reading operation)
+    @property
+    def scr(self):
+        return self.settings.get('scr')
+
+    @property
+    def encoding(self):
+        return self.settings.get('encoding')
+
+    @property
+    def separator(self):
+        return self.settings.get('separator')
+
+    @property
+    def decimal_separator(self):
+        return self.settings.get('decimal_separator')
+
+    @property
+    def char_delimiter(self):
+        return self.settings.get('char_delimiter')
+
+    @property
+    def coordinates_field(self):
+        return self.settings.get('coordinates_field')
+
+    @property
+    def number_lines_to_ignore(self):
+        return self.settings.get('number_lines_to_ignore')
+
+    @property
+    def header(self):
+        return self.settings.get('header')
+
+    @property
+    def latitude_field(self):
+        return self.settings.get('latitude_field')
+
+    @property
+    def longitude_field(self):
+        return self.settings.get('longitude_field')
+
+    @property
+    def longlat_field(self):
+        return self.settings.get('longlat_field')
+
+    @property
+    def coordinates_field_count(self):
+        return self.settings.get('coordinates_field_count')
+
+    @property
+    def coordinates_separator(self):
+        return self.settings.get('coordinate_separator')

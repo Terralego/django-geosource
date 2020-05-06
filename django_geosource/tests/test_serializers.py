@@ -18,7 +18,7 @@ class CSVSourceSerializerTestCase(TestCase):
             "longitude_field": "long",
             "separator": "semicolon",
             "decimal_separator": "coma",
-            "char_delimiter": "quotationmark",
+            "char_delimiter": "doublequote",
             "number_lines_to_ignore": 0,
             "header": True,
         }
@@ -41,3 +41,19 @@ class CSVSourceSerializerTestCase(TestCase):
         serializer.save()
 
         self.assertTrue(CSVSource.objects.filter(settings=self.settings_data).exists())
+
+    def test_data_representation_is_correct(self):
+        csv = SimpleUploadedFile(name="test.csv", content=b"some content")
+        data = {
+            "file": csv,
+            "geom_type": 8,
+            "name": "test",
+            'settings': self.settings_data,
+        }
+        csv_source = CSVSource.objects.create(**data)
+        serializer = CSVSourceSerializer(csv_source)
+        self.assertIsNone(serializer.data.get('settings'))
+
+        # assert at least one of the settings element is at root level in serializer data
+        # if it works for one, it works for all the other
+        self.assertEqual(serializer.data.get('scr'), csv_source.settings['scr'])
