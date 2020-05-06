@@ -377,38 +377,14 @@ class WMTSSource(Source):
 
 
 class CSVSource(Source):
-    COMA = ("coma", ",")
-    SEMI_COLON = ("semicolon", ";")
-    TAB = ("tabulation", "\t")
-    SPACE = ("space", " ")
-    COLUMN = ("column", " ")
-    QUOTATION_MARK = ("quotationmark", '"')
-    POINT = ("point", ".")
-
-    SEPARATORS = (COMA, SEMI_COLON, TAB, SPACE, COLUMN)
-    DECIMAL_SEPARATORS = (COMA, SEMI_COLON, POINT, SPACE)
-    DELIMITERS = (QUOTATION_MARK,)
-
     file = models.FileField(upload_to="geosource/csv/%Y")
-    encoding_field = models.CharField(max_length=100)
-    decimal_separator_field = models.CharField(
-        max_length=100, choices=DECIMAL_SEPARATORS, default=POINT[1]
-    )
-    separator_field = models.CharField(
-        max_length=100, choices=SEPARATORS, default=SEMI_COLON[1]
-    )
-    delimiter_field = models.CharField(
-        max_length=100, choices=DELIMITERS, default=QUOTATION_MARK[1]
-    )
-    longitude_field = models.FloatField()
-    latitude_field = models.FloatField()
-    number_lines_to_ignore_field = models.PositiveIntegerField(default=0)
 
     def get_file_as_sheet(self):
-        with open(self.file.name, "r") as f:
+        separator = self._get_separator(self.settings["separator"])
+        with open(self.file.name, "r", encoding=self.settings["encoding"]) as f:
             try:
                 return pyexcel.get_sheet(
-                    file_type="csv", file_content=f, delimiter=self.separator_field
+                    file_type="csv", file_content=f, delimiter=separator
                 )
             except pyexcel.exceptions.FileTypeNotSupported:
                 logger.info("Source's CSV file is not valid")
@@ -416,11 +392,75 @@ class CSVSource(Source):
 
     def _get_records(self, limit=None):
         sheet = self.get_file_as_sheet()
-        sheet.name_columns_by_row(0)
+        if self.settings.get("header"):
+            sheet.name_columns_by_row(0)
 
         limit = limit if limit else len(sheet)
 
         records = []
+        srid = self.settings["scr"]
         for row in sheet:
-            records.append({name: value for name, value in zip(sheet.colnames, row)})
+            if self.settings["coordinates_field"] == "two_columns":
+                lat_field = self.settings["latitude_field"]
+                lng_field = self.settings["longitude_field"]
+
+                # if no header, we except index for the columns has been provided
+                if self.settings.get("header"):
+                    x = row[sheet.colnames.index(lng_field)]
+                    y = row[sheet.colnames.index(lat_field)]
+                else:
+                    x = row[sheet.colnames[int(lng_field)]]
+                    y = row[sheet.colnames[int(lat_field)]]
+
+                records.append(
+                    {
+                        self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
+                            f"Point({x} {y})", srid=srid
+                        ),
+                        **{
+                            name: value
+                            for i, (name, value) in enumerate(zip(sheet.colnames, row))
+                            if i not in (row.index(x), row.index(y))
+                        },
+                    }
+                )
+            else:
+                sep = self.settings["coordinates_separtor"]
+                is_xy = self.settings["coordinates_field_count"] == "xy"
+                lnglat_field = self.settings["latlong_field"]
+
+                # if no header, we except index for the column has been provided
+                if self.settings.get("header"):
+                    coords = row[sheet.colnames.index(lnglat_field)]
+                else:
+                    coords = row[sheet.colnames[int(lnglat_field)]]
+
+                # some fools use a reversed cartesian coordinates system (╯°□°)╯︵ ┻━┻
+                x, y = coords.split(sep) if is_xy else coords.split(sep).reverse()
+                records.append(
+                    {
+                        self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
+                            f"Point({x} {y})", srid=srid
+                        ),
+                        **{
+                            name: value
+                            for i, (name, value) in enumerate(zip(sheet.colnames, row))
+                            if i != row.index(coords)
+                        },
+                    }
+                )
+
         return records
+
+    def _get_separator(self, name):
+        SEPARATORS = {
+            "coma": ",",
+            "semicolon": ";",
+            "tabulation": "\t",
+            "space": " ",
+            "column": ":",
+            "doublequote": '"',
+            "simplequote": "'",
+            "point": ".",
+        }
+        return SEPARATORS[name]
