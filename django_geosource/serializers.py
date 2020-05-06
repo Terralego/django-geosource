@@ -294,7 +294,6 @@ class CSVSourceSerializer(FileSourceSerializer):
 
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)
-        print(validated_data)
         validated_data["settings"] = {
             "scr": validated_data.pop("scr"),
             "encoding": validated_data.pop("encoding"),
@@ -323,11 +322,6 @@ class CSVSourceSerializer(FileSourceSerializer):
             )
         validated_data.pop('coordinates_field')
         return validated_data
-
-    def to_representation(self, obj):
-        data = super().to_representation(obj)
-        data.update(data.pop("settings", {}))
-        return data
 
     def validate(self, data):
         validated_data = super().validate(data)
