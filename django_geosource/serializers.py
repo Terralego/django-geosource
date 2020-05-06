@@ -3,8 +3,10 @@ from os.path import basename
 import psycopg2
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import transaction
+from django.utils.translation import ugettext as _
 from psycopg2 import sql
 from rest_framework.serializers import (
+    BooleanField,
     CharField,
     IntegerField,
     ModelSerializer,
@@ -267,11 +269,95 @@ class WMTSSourceSerialize(SourceSerializer):
 
 
 class CSVSourceSerializer(FileSourceSerializer):
-    decimal_separator_field = CharField(source="get_decimal_separator_field_display")
-    separator_field = CharField(source="get_separator_field_display")
-    delimiter_field = CharField(source="get_delimiter_field_display")
+    csr = CharField(required=True)
+    encoding = CharField(required=True)
+    separator = CharField(required=True)
+    decimal_separator = CharField(required=True)
+    char_delimiter = CharField(required=True)
+    coordinates_field = CharField(required=True)
+    number_lines_to_ignore = IntegerField(required=True)
+    header = BooleanField(required=True)
+
+    latitude_field = CharField(required=False)
+    longitude_field = CharField(required=False)
+    longlat_field = CharField(required=False)
+    coordinates_field_count = CharField(required=False)
+    coordinates_separtor = CharField(required=False)
 
     class Meta:
         model = CSVSource
         fields = "__all__"
         extra_kwargs = {"file": {"write_only": True}}
+
+    def to_internal_value(self, data):
+        validated_data = super().to_internal_value(data)
+        print(validated_data)
+        validated_data["settings"] = {
+            "scr": validated_data.get("csr"),
+            "encoding": validated_data.get("encoding"),
+            "separator": validated_data.get("separator"),
+            "decimal_separator": validated_data.get("decimal_separator"),
+            "char_delimiter": validated_data.get("delimiter"),
+            "coordinates_field": validated_data.get("coordinates_field"),
+            "number_lines_to_ignore": validated_data.get("number_lines_to_ignore"),
+            "header": validated_data.get("header"),
+        }
+        if validated_data.get("coordinates_field") == "one_column":
+            validated_data["settings"].update(
+                {
+                    "longlat_field": validated_data.get("longlat_field"),
+                    "coordinates_order": validated_data.get("coordinates_order"),
+                    "coordinates_separtor": validated_data.get("coordinates_separtor"),
+                }
+            )
+        elif validated_data.get("coordinates_field") == "two_columns":
+            validated_data["settings"].update(
+                {
+                    "latitude_field": validated_data.get("latitude_field"),
+                    "longitude_field": validated_data.get("longitude_field"),
+                }
+            )
+        return validated_data
+
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        data.update(data["settings"])
+        return data
+
+    def validate(self, data):
+        validated_data = super().validate(data)
+        if data["coordinates_field"] == "one_column":
+            if not data.get("longlat_field"):
+                raise ValidationError(
+                    _(
+                        "longlat_field must be defined when coordinates are set to one column"
+                    )
+                )
+            if not data.get("coordinates_order"):
+                raise ValidationError(
+                    _(
+                        "Coordinates order must be specified when coordinates are set to one column"
+                    )
+                )
+            if not data.get("coordinates_separtor"):
+                raise ValidationError(
+                    _(
+                        "Coordinates separator must be specified when coordinates are set to one column"
+                    )
+                )
+        elif data["coordinates_field"] == "two_columns":
+            if not data.get("latitude_field"):
+                raise ValidationError(
+                    _(
+                        "Latitude field must be specified when coordinates are set to two columns"
+                    )
+                )
+            if not data.get("longitude_field"):
+                raise ValidationError(
+                    _(
+                        "Longitude field must be specified when coordinates are set to two columns"
+                    )
+                )
+        else:
+            raise ValidationError(_("Incorrect value for coordinates field"))
+        return validated_data

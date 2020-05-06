@@ -260,8 +260,16 @@ class ModelCSVSourceTestCase(TestCase):
         cls.source = CSVSource.objects.create(
             file=cls.source_name,
             geom_type=8,
-            longitude_field=42.2222,
-            latitude_field=4.2222,
+            settings={
+                "encoding": "UTF-8",
+                "scr": "EPSG_4326",
+                "separator": "semicolon",
+                "decimal_separator": "coma",
+                "header": True,
+                "coordinates_field": "two_columns",
+                "longitude_field": "XCOORD",
+                "latitude_field": "YCOORD",
+            },
         )
 
     def test_get_records(self):
