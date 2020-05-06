@@ -380,14 +380,16 @@ class CSVSource(Source):
     file = models.FileField(upload_to="geosource/csv/%Y")
 
     def get_file_as_sheet(self):
-        separator = self._get_separator(self.settings["separator"])
-        with open(self.file.name, "r", encoding=self.settings["encoding"]) as f:
+        separator = self._get_separator(self.settings["field_separator"])
+        with self.file.open(mode="r") as f:
             try:
                 return pyexcel.get_sheet(
                     file_type="csv", file_content=f, delimiter=separator
                 )
-            except pyexcel.exceptions.FileTypeNotSupported:
-                logger.info("Source's CSV file is not valid")
+            except pyexcel.exceptions.FileTypeNotSupported as err:
+                msg = "Source's CSV file is not valid"
+                logger.info(msg)
+                err.message = msg  # new message for the user
                 raise
 
     def _get_records(self, limit=None):
@@ -398,7 +400,7 @@ class CSVSource(Source):
         limit = limit if limit else len(sheet)
 
         records = []
-        srid = self.settings["scr"]
+        srid = self.settings["coordinate_reference_system"]
         for row in sheet:
             if self.settings["coordinates_field"] == "two_columns":
                 lat_field = self.settings["latitude_field"]
@@ -467,53 +469,53 @@ class CSVSource(Source):
 
     # properties are use by serializer for representation (reading operation)
     @property
-    def scr(self):
-        return self.settings.get('scr')
+    def coordinate_reference_system(self):
+        return self.settings.get("coordinate_reference_system")
 
     @property
     def encoding(self):
-        return self.settings.get('encoding')
+        return self.settings.get("encoding")
 
     @property
-    def separator(self):
-        return self.settings.get('separator')
+    def field_separator(self):
+        return self.settings.get("separator")
 
     @property
     def decimal_separator(self):
-        return self.settings.get('decimal_separator')
+        return self.settings.get("decimal_separator")
 
     @property
     def char_delimiter(self):
-        return self.settings.get('char_delimiter')
+        return self.settings.get("char_delimiter")
 
     @property
     def coordinates_field(self):
-        return self.settings.get('coordinates_field')
+        return self.settings.get("coordinates_field")
 
     @property
     def number_lines_to_ignore(self):
-        return self.settings.get('number_lines_to_ignore')
+        return self.settings.get("number_lines_to_ignore")
 
     @property
     def header(self):
-        return self.settings.get('header')
+        return self.settings.get("header")
 
     @property
     def latitude_field(self):
-        return self.settings.get('latitude_field')
+        return self.settings.get("latitude_field")
 
     @property
     def longitude_field(self):
-        return self.settings.get('longitude_field')
+        return self.settings.get("longitude_field")
 
     @property
     def longlat_field(self):
-        return self.settings.get('longlat_field')
+        return self.settings.get("longlat_field")
 
     @property
     def coordinates_field_count(self):
-        return self.settings.get('coordinates_field_count')
+        return self.settings.get("coordinates_field_count")
 
     @property
     def coordinates_separator(self):
-        return self.settings.get('coordinate_separator')
+        return self.settings.get("coordinate_separator")
