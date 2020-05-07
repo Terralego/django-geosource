@@ -391,10 +391,15 @@ class CSVSource(Source):
 
     def get_file_as_sheet(self):
         separator = self._get_separator(self.settings["field_separator"])
+        quotechar = self._get_separator(self.settings["char_delimiter"])
         with self.file.open(mode="r") as f:
             try:
                 return pyexcel.get_sheet(
-                    file_type="csv", file_content=f, delimiter=separator
+                    file_type="csv",
+                    file_content=f,
+                    delimiter=separator,
+                    encoding=self.settings["encoding"],
+                    quotechar=quotechar,
                 )
             except pyexcel.exceptions.FileTypeNotSupported as err:
                 msg = "Source's CSV file is not valid"
@@ -459,6 +464,12 @@ class CSVSource(Source):
             is_xy = self.settings["coordinates_field_count"] == "xy"
             # some fools use a reversed cartesian coordinates system (╯°□°)╯︵ ┻━┻
             x, y = coords[0].split(sep) if is_xy else coords[0].split(sep).reverse()
+
+        # correct formated decimal is required for GEOSGeometry
+        if not self.settings["decimal_separator"] == "point":
+            delimiter = self._get_separator(self.settings["decimal_separator"])
+            x = x.replace(delimiter, ".")
+            y = y.replace(delimiter, ".")
 
         return (x, y)
 
