@@ -265,7 +265,7 @@ class ModelCSVSourceTestCase(TestCase):
                 "coordinate_reference_system": "EPSG_4326",
                 "field_separator": "semicolon",
                 "decimal_separator": "coma",
-                "header": True,
+                "use_header": True,
                 "coordinates_field": "two_columns",
                 "longitude_field": "XCOORD",
                 "latitude_field": "YCOORD",
