@@ -377,6 +377,16 @@ class WMTSSource(Source):
 
 
 class CSVSource(Source):
+    SEPARATORS = {
+        "coma": ",",
+        "semicolon": ";",
+        "tabulation": "\t",
+        "space": " ",
+        "column": ":",
+        "doublequote": '"',
+        "simplequote": "'",
+        "point": ".",
+    }
     file = models.FileField(upload_to="geosource/csv/%Y")
 
     def get_file_as_sheet(self):
@@ -454,17 +464,7 @@ class CSVSource(Source):
         return (x, y)
 
     def _get_separator(self, name):
-        SEPARATORS = {
-            "coma": ",",
-            "semicolon": ";",
-            "tabulation": "\t",
-            "space": " ",
-            "column": ":",
-            "doublequote": '"',
-            "simplequote": "'",
-            "point": ".",
-        }
-        return SEPARATORS[name]
+        return self.SEPARATORS[name]
 
     # properties are use by serializer for representation (reading operation)
     @property
