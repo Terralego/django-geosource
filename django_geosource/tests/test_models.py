@@ -257,8 +257,9 @@ class ModelCSVSourceTestCase(TestCase):
         cls.base_settings = {
             "encoding": "UTF-8",
             "coordinate_reference_system": "EPSG_4326",
+            "char_delimiter": "doublequote",
             "field_separator": "semicolon",
-            "decimal_separator": "coma",
+            "decimal_separator": "point",
             "use_header": True,
         }
 
@@ -291,6 +292,29 @@ class ModelCSVSourceTestCase(TestCase):
                 "coordinates_field": "one_column",
                 "latlong_field": "coordxy",
                 "coordinates_separator": "coma",
+                "coordinates_field_count": "xy",
+            },
+        )
+        records = source._get_records()
+        self.assertEqual(len(records), 9, len(records))
+
+    def test_get_records_with_decimal_separator_as_coma(self):
+        source_name = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source_xy_with_coma.csv"
+        )
+        source = CSVSource.objects.create(
+            file=source_name,
+            geom_type=0,
+            settings={
+                "encoding": "UTF-8",
+                "coordinate_reference_system": "EPSG_4326",
+                "char_delimiter": "doublequote",
+                "field_separator": "semicolon",
+                "decimal_separator": "coma",
+                "use_header": True,
+                "coordinates_field": "one_column",
+                "latlong_field": "coordxy",
+                "coordinates_separator": "point",
                 "coordinates_field_count": "xy",
             },
         )
