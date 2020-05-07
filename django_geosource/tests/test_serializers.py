@@ -20,7 +20,7 @@ class CSVSourceSerializerTestCase(TestCase):
             "decimal_separator": "coma",
             "char_delimiter": "doublequote",
             "number_lines_to_ignore": 0,
-            "header": True,
+            "use_header": True,
         }
 
     def tearDown(self):

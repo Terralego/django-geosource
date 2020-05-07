@@ -394,7 +394,7 @@ class CSVSource(Source):
 
     def _get_records(self, limit=None):
         sheet = self.get_file_as_sheet()
-        if self.settings.get("header"):
+        if self.settings.get("use_header"):
             sheet.name_columns_by_row(0)
 
         limit = limit if limit else len(sheet)
@@ -406,8 +406,8 @@ class CSVSource(Source):
                 lat_field = self.settings["latitude_field"]
                 lng_field = self.settings["longitude_field"]
 
-                # if no header, we except index for the columns has been provided
-                if self.settings.get("header"):
+                # if no header, we expect index for the columns has been provided
+                if self.settings.get("use_header"):
                     x = row[sheet.colnames.index(lng_field)]
                     y = row[sheet.colnames.index(lat_field)]
                 else:
@@ -431,8 +431,8 @@ class CSVSource(Source):
                 is_xy = self.settings["coordinates_field_count"] == "xy"
                 lnglat_field = self.settings["latlong_field"]
 
-                # if no header, we except index for the column has been provided
-                if self.settings.get("header"):
+                # if no header, we expect index for the column has been provided
+                if self.settings.get("use_header"):
                     coords = row[sheet.colnames.index(lnglat_field)]
                 else:
                     coords = row[sheet.colnames[int(lnglat_field)]]
@@ -497,8 +497,8 @@ class CSVSource(Source):
         return self.settings.get("number_lines_to_ignore")
 
     @property
-    def header(self):
-        return self.settings.get("header")
+    def use_header(self):
+        return self.settings.get("use_header")
 
     @property
     def latitude_field(self):
