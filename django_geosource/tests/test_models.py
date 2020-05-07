@@ -254,24 +254,45 @@ class ModelWMTSSourceTestCase(TestCase):
 class ModelCSVSourceTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.source_name = os.path.join(
+        cls.base_settings = {
+            "encoding": "UTF-8",
+            "coordinate_reference_system": "EPSG_4326",
+            "field_separator": "semicolon",
+            "decimal_separator": "coma",
+            "use_header": True,
+        }
+
+    def test_get_records_with_two_columns_coordinates(self):
+        source_name = os.path.join(
             settings.BASE_DIR, "django_geosource", "tests", "source.csv"
         )
-        cls.source = CSVSource.objects.create(
-            file=cls.source_name,
-            geom_type=8,
+        source = CSVSource.objects.create(
+            file=source_name,
+            geom_type=0,
             settings={
-                "encoding": "UTF-8",
-                "coordinate_reference_system": "EPSG_4326",
-                "field_separator": "semicolon",
-                "decimal_separator": "coma",
-                "use_header": True,
+                **self.base_settings,
                 "coordinates_field": "two_columns",
                 "longitude_field": "XCOORD",
                 "latitude_field": "YCOORD",
             },
         )
-
-    def test_get_records(self):
-        records = self.source._get_records()
+        records = source._get_records()
         self.assertEqual(len(records), 6, len(records))
+
+    def test_get_records_with_one_column_coordinates(self):
+        source_name = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source_xy.csv"
+        )
+        source = CSVSource.objects.create(
+            file=source_name,
+            geom_type=0,
+            settings={
+                **self.base_settings,
+                "coordinates_field": "one_column",
+                "latlong_field": "coordxy",
+                "coordinates_separator": "coma",
+                "coordinates_field_count": "xy",
+            },
+        )
+        records = source._get_records()
+        self.assertEqual(len(records), 9, len(records))

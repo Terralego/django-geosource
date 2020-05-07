@@ -424,9 +424,9 @@ class CSVSource(Source):
                 lnglat_field = self.settings["latlong_field"]
                 x, y = self._extract_coordinates(row, sheet.colnames, [lnglat_field])
                 ignored_field = (
-                    (sheet.colnames.index(lng_field),)
+                    (sheet.colnames.index(lnglat_field),)
                     if self.settings.get("use_header")
-                    else (int(lng_field),)
+                    else (int(lnglat_field),)
                 )
 
             records.append(
@@ -452,11 +452,10 @@ class CSVSource(Source):
             )
             c = row[field_index]
             coords.append(c)
-
         if len(coords) == 2:
             x, y = coords
         else:
-            sep = self.settings["coordinates_separtor"]
+            sep = self._get_separator(self.settings["coordinates_separator"])
             is_xy = self.settings["coordinates_field_count"] == "xy"
             # some fools use a reversed cartesian coordinates system (╯°□°)╯︵ ┻━┻
             x, y = coords[0].split(sep) if is_xy else coords[0].split(sep).reverse()
@@ -508,8 +507,8 @@ class CSVSource(Source):
         return self.settings.get("longitude_field")
 
     @property
-    def longlat_field(self):
-        return self.settings.get("longlat_field")
+    def latlong_field(self):
+        return self.settings.get("latlong_field")
 
     @property
     def coordinates_field_count(self):

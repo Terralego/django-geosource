@@ -281,9 +281,9 @@ class CSVSourceSerializer(FileSourceSerializer):
 
     latitude_field = CharField(required=False)
     longitude_field = CharField(required=False)
-    longlat_field = CharField(required=False)
+    latlong_field = CharField(required=False)
     coordinates_field_count = CharField(required=False)
-    coordinates_separtor = CharField(required=False)
+    coordinates_separator = CharField(required=False)
     geom_type = ChoiceField(
         default=GeometryTypes.Point.value, choices=GeometryTypes.choices()
     )
@@ -313,9 +313,13 @@ class CSVSourceSerializer(FileSourceSerializer):
         if validated_data.get("coordinates_field") == "one_column":
             validated_data["settings"].update(
                 {
-                    "longlat_field": validated_data.pop("longlat_field"),
-                    "coordinates_order": validated_data.pop("coordinates_order"),
-                    "coordinates_separtor": validated_data.pop("coordinates_separtor"),
+                    "latlong_field": validated_data.pop("latlong_field"),
+                    "coordinates_field_count": validated_data.pop(
+                        "coordinates_field_count"
+                    ),
+                    "coordinates_separator": validated_data.pop(
+                        "coordinates_separator"
+                    ),
                 }
             )
 
@@ -332,19 +336,19 @@ class CSVSourceSerializer(FileSourceSerializer):
     def validate(self, data):
         validated_data = super().validate(data)
         if data["settings"]["coordinates_field"] == "one_column":
-            if not data["settings"].get("longlat_field"):
+            if not data["settings"].get("latlong_field"):
                 raise ValidationError(
                     _(
-                        "longlat_field must be defined when coordinates are set to one column"
+                        "latlong_field must be defined when coordinates are set to one column"
                     )
                 )
-            if not data["settings"].get("coordinates_order"):
+            if not data["settings"].get("coordinates_field_count"):
                 raise ValidationError(
                     _(
                         "Coordinates order must be specified when coordinates are set to one column"
                     )
                 )
-            if not data["settings"].get("coordinates_separtor"):
+            if not data["settings"].get("coordinates_separator"):
                 raise ValidationError(
                     _(
                         "Coordinates separator must be specified when coordinates are set to one column"
