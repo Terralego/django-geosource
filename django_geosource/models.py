@@ -378,7 +378,7 @@ class WMTSSource(Source):
 
 class CSVSource(Source):
     SEPARATORS = {
-        "coma": ",",
+        "comma": ",",
         "semicolon": ";",
         "tabulation": "\t",
         "space": " ",
