@@ -406,53 +406,52 @@ class CSVSource(Source):
                 lat_field = self.settings["latitude_field"]
                 lng_field = self.settings["longitude_field"]
 
-                # if no header, we expect index for the columns has been provided
-                if self.settings.get("use_header"):
-                    x = row[sheet.colnames.index(lng_field)]
-                    y = row[sheet.colnames.index(lat_field)]
-                else:
-                    x = row[sheet.colnames[int(lng_field)]]
-                    y = row[sheet.colnames[int(lat_field)]]
-
-                records.append(
-                    {
-                        self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
-                            f"Point({x} {y})", srid=srid
-                        ),
-                        **{
-                            name: value
-                            for i, (name, value) in enumerate(zip(sheet.colnames, row))
-                            if i not in (row.index(x), row.index(y))
-                        },
-                    }
+                x, y = self._extract_coordinates(
+                    row, sheet.colnames, [lng_field, lat_field]
                 )
+                ignored_field = (row.index(x), row.index(y))
             else:
-                sep = self.settings["coordinates_separtor"]
-                is_xy = self.settings["coordinates_field_count"] == "xy"
                 lnglat_field = self.settings["latlong_field"]
-
-                # if no header, we expect index for the column has been provided
-                if self.settings.get("use_header"):
-                    coords = row[sheet.colnames.index(lnglat_field)]
-                else:
-                    coords = row[sheet.colnames[int(lnglat_field)]]
-
-                # some fools use a reversed cartesian coordinates system (╯°□°)╯︵ ┻━┻
-                x, y = coords.split(sep) if is_xy else coords.split(sep).reverse()
-                records.append(
-                    {
-                        self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
-                            f"Point({x} {y})", srid=srid
-                        ),
-                        **{
-                            name: value
-                            for i, (name, value) in enumerate(zip(sheet.colnames, row))
-                            if i != row.index(coords)
-                        },
-                    }
+                x, y = self._extract_coordinates(row, sheet.colnames, [lnglat_field])
+                ignored_field = (
+                    (sheet.colnames.index(lng_field),)
+                    if self.settings.get("use_header")
+                    else (int(lng_field),)
                 )
 
+            records.append(
+                {
+                    self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
+                        f"Point({x} {y})", srid=srid
+                    ),
+                    **{
+                        name: value
+                        for i, (name, value) in enumerate(zip(sheet.colnames, row))
+                        if i not in ignored_field
+                    },
+                }
+            )
         return records
+
+    def _extract_coordinates(self, row, colnames, fields):
+        coords = []
+        for field in fields:
+            # if no header, we expect index for the columns has been provided
+            field_index = (
+                colnames.index(field) if self.settings.get("use_header") else int(field)
+            )
+            c = row[field_index]
+            coords.append(c)
+
+        if len(coords) == 2:
+            x, y = coords
+        else:
+            sep = self.settings["coordinates_separtor"]
+            is_xy = self.settings["coordinates_field_count"] == "xy"
+            # some fools use a reversed cartesian coordinates system (╯°□°)╯︵ ┻━┻
+            x, y = coords[0].split(sep) if is_xy else coords[0].split(sep).reverse()
+
+        return (x, y)
 
     def _get_separator(self, name):
         SEPARATORS = {
