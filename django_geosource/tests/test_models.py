@@ -291,16 +291,16 @@ class ModelCSVSourceTestCase(TestCase):
                 **self.base_settings,
                 "coordinates_field": "one_column",
                 "latlong_field": "coordxy",
-                "coordinates_separator": "coma",
+                "coordinates_separator": "comma",
                 "coordinates_field_count": "xy",
             },
         )
         records = source._get_records()
         self.assertEqual(len(records), 9, len(records))
 
-    def test_get_records_with_decimal_separator_as_coma(self):
+    def test_get_records_with_decimal_separator_as_comma(self):
         source_name = os.path.join(
-            settings.BASE_DIR, "django_geosource", "tests", "source_xy_with_coma.csv"
+            settings.BASE_DIR, "django_geosource", "tests", "source_xy_with_comma.csv"
         )
         source = CSVSource.objects.create(
             file=source_name,
@@ -310,7 +310,7 @@ class ModelCSVSourceTestCase(TestCase):
                 "coordinate_reference_system": "EPSG_4326",
                 "char_delimiter": "doublequote",
                 "field_separator": "semicolon",
-                "decimal_separator": "coma",
+                "decimal_separator": "comma",
                 "use_header": True,
                 "coordinates_field": "one_column",
                 "latlong_field": "coordxy",

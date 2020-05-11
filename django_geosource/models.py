@@ -415,7 +415,7 @@ class CSVSource(Source):
         limit = limit if limit else len(sheet)
 
         records = []
-        srid = self.settings["coordinate_reference_system"]
+        srid = self._get_srid()
         for row in sheet:
             if self.settings["coordinates_field"] == "two_columns":
                 lat_field = self.settings["latitude_field"]
@@ -475,6 +475,9 @@ class CSVSource(Source):
 
     def _get_separator(self, name):
         return self.SEPARATORS[name]
+
+    def _get_srid(self):
+        return int(self.settings["coordinate_reference_system"].split('_')[1])
 
     # properties are use by serializer for representation (reading operation)
     @property
