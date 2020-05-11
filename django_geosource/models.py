@@ -477,7 +477,7 @@ class CSVSource(Source):
         return self.SEPARATORS[name]
 
     def _get_srid(self):
-        return int(self.settings["coordinate_reference_system"].split('_')[1])
+        return int(self.settings["coordinate_reference_system"].split("_")[1])
 
     # properties are use by serializer for representation (reading operation)
     @property
