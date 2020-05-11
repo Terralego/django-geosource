@@ -1,4 +1,11 @@
 
+0.4.3 / 2020-05-11
+==================
+
+  * Correctly extract srid from data
+  * fix typo in separators name
+  * Ensure correct csv decoding
+
 0.4.2 / 2020-05-07
 ==================
 
