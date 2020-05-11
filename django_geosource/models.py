@@ -392,20 +392,18 @@ class CSVSource(Source):
     def get_file_as_sheet(self):
         separator = self._get_separator(self.settings["field_separator"])
         quotechar = self._get_separator(self.settings["char_delimiter"])
-        with self.file.open(mode="r") as f:
-            try:
-                return pyexcel.get_sheet(
-                    file_type="csv",
-                    file_content=f,
-                    delimiter=separator,
-                    encoding=self.settings["encoding"],
-                    quotechar=quotechar,
-                )
-            except pyexcel.exceptions.FileTypeNotSupported as err:
-                msg = "Source's CSV file is not valid"
-                logger.info(msg)
-                err.message = msg  # new message for the user
-                raise
+        try:
+            return pyexcel.get_sheet(
+                file_name=self.file.path,
+                delimiter=separator,
+                encoding=self.settings["encoding"],
+                quotechar=quotechar,
+            )
+        except pyexcel.exceptions.FileTypeNotSupported as err:
+            msg = "Source's CSV file is not valid"
+            logger.info(msg)
+            err.message = msg  # new message for the user
+            raise
 
     def _get_records(self, limit=None):
         sheet = self.get_file_as_sheet()
