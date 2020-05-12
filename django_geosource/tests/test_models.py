@@ -320,3 +320,27 @@ class ModelCSVSourceTestCase(TestCase):
         )
         records = source._get_records()
         self.assertEqual(len(records), 9, len(records))
+
+    def test_get_records_with_nulled_columns_ignored(self):
+        source_name = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source.csv",
+        )
+        source = CSVSource.objects.create(
+            file=source_name,
+            geom_type=0,
+            settings={
+                **self.base_settings,
+                "ignore_columns": True,
+                "coordinates_field": "two_columns",
+                "longitude_field": "XCOORD",
+                "latitude_field": "YCOORD",
+            },
+        )
+        records = source._get_records()
+        # this entry as an empty column and should not be in records
+        empty_entry = [
+            record.get("photoEtablissement")
+            for record in records
+            if record.get("photoEtablissement")
+        ]
+        self.assertEqual(len(empty_entry), 0, empty_entry)

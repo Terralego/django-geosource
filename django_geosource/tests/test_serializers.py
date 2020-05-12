@@ -18,6 +18,7 @@ class CSVSourceSerializerTestCase(TestCase):
             "char_delimiter": "doublequote",
             "number_lines_to_ignore": 0,
             "use_header": True,
+            "ignore_columns": False,
         }
 
     def tearDown(self):

@@ -277,8 +277,9 @@ class CSVSourceSerializer(FileSourceSerializer):
     char_delimiter = CharField(required=True)
     coordinates_field = CharField(required=True)
     number_lines_to_ignore = IntegerField(required=True)
-    use_header = BooleanField(required=True)
 
+    use_header = BooleanField(required=False, default=False)
+    ignore_columns = BooleanField(required=False, default=False)
     latitude_field = CharField(required=False)
     longitude_field = CharField(required=False)
     latlong_field = CharField(required=False)
@@ -309,6 +310,7 @@ class CSVSourceSerializer(FileSourceSerializer):
             "coordinates_field": validated_data.get("coordinates_field"),
             "number_lines_to_ignore": validated_data.pop("number_lines_to_ignore"),
             "use_header": validated_data.pop("use_header"),
+            "ignore_columns": validated_data.pop("ignore_columns"),
         }
         if validated_data.get("coordinates_field") == "one_column":
             validated_data["settings"].update(

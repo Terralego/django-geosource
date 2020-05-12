@@ -410,6 +410,10 @@ class CSVSource(Source):
         if self.settings.get("use_header"):
             sheet.name_columns_by_row(0)
 
+        ignored_columns = []
+        if self.settings.get("ignore_columns"):
+            ignored_columns = self._get_null_columns_indexes(sheet)
+
         limit = limit if limit else len(sheet)
 
         records = []
@@ -422,15 +426,16 @@ class CSVSource(Source):
                 x, y = self._extract_coordinates(
                     row, sheet.colnames, [lng_field, lat_field]
                 )
-                ignored_field = (row.index(x), row.index(y))
+                ignored_field = (row.index(x), row.index(y), *ignored_columns)
             else:
                 lnglat_field = self.settings["latlong_field"]
                 x, y = self._extract_coordinates(row, sheet.colnames, [lnglat_field])
-                ignored_field = (
+                coord_fields = (
                     (sheet.colnames.index(lnglat_field),)
                     if self.settings.get("use_header")
                     else (int(lnglat_field),)
                 )
+                ignored_field = (*coord_fields, *ignored_columns)
 
             records.append(
                 {
@@ -471,6 +476,13 @@ class CSVSource(Source):
 
         return (x, y)
 
+    def _get_null_columns_indexes(self, sheet):
+        null_columns_indexes = []
+        for i, column in enumerate(sheet.column):
+            non_empty_cells = [cell for cell in column if cell != ""]
+            (len(non_empty_cells) == 0) and null_columns_indexes.append(i)
+        return null_columns_indexes
+
     def _get_separator(self, name):
         return self.SEPARATORS[name]
 
@@ -488,7 +500,7 @@ class CSVSource(Source):
 
     @property
     def field_separator(self):
-        return self.settings.get("separator")
+        return self.settings.get("field_separator")
 
     @property
     def decimal_separator(self):
@@ -509,6 +521,10 @@ class CSVSource(Source):
     @property
     def use_header(self):
         return self.settings.get("use_header")
+
+    @property
+    def ignore_columns(self):
+        return self.settings.get("ignore_columns")
 
     @property
     def latitude_field(self):
