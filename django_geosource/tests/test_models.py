@@ -344,3 +344,22 @@ class ModelCSVSourceTestCase(TestCase):
             if record.get("photoEtablissement")
         ]
         self.assertEqual(len(empty_entry), 0, empty_entry)
+
+    def test_get_records_with_no_header_and_yx_csv(self):
+        source_name = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source_xy_noheader.csv",
+        )
+        source = CSVSource.objects.create(
+            file=source_name,
+            geom_type=0,
+            settings={
+                **self.base_settings,
+                "use_header": False,
+                "coordinates_field": "one_column",
+                "latlong_field": "0",
+                "coordinates_separator": "comma",
+                "coordinates_field_count": "yx",
+            },
+        )
+        records = source._get_records()
+        self.assertEqual(len(records), 9, len(records))
