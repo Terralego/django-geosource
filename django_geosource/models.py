@@ -437,16 +437,13 @@ class CSVSource(Source):
                 )
                 ignored_field = (*coord_fields, *ignored_columns)
 
+            cells = self._get_cells(sheet, row, ignored_field)
             records.append(
                 {
                     self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
                         f"Point({x} {y})", srid=srid
                     ),
-                    **{
-                        name: value
-                        for i, (name, value) in enumerate(zip(sheet.colnames, row))
-                        if i not in ignored_field
-                    },
+                    **cells,
                 }
             )
         return records
@@ -466,7 +463,7 @@ class CSVSource(Source):
             sep = self._get_separator(self.settings["coordinates_separator"])
             is_xy = self.settings["coordinates_field_count"] == "xy"
             # some fools use a reversed cartesian coordinates system (╯°□°)╯︵ ┻━┻
-            x, y = coords[0].split(sep) if is_xy else coords[0].split(sep).reverse()
+            x, y = coords[0].split(sep) if is_xy else coords[0].split(sep)[::-1]
 
         # correct formated decimal is required for GEOSGeometry
         if not self.settings["decimal_separator"] == "point":
@@ -482,6 +479,18 @@ class CSVSource(Source):
             non_empty_cells = [cell for cell in column if cell != ""]
             (len(non_empty_cells) == 0) and null_columns_indexes.append(i)
         return null_columns_indexes
+
+    def _get_cells(self, sheet, row, ingored_columns):
+        if not self.settings.get("use_header"):
+            # records names are the column index when no header was provided
+            # casting to str to avoid issue (e.i id_field)
+            return {str(i): value for i, value in enumerate(row) if i not in ingored_columns}
+
+        return {
+            name: value
+            for i, (name, value) in enumerate(zip(sheet.colnames, row))
+            if i not in ingored_columns
+        }
 
     def _get_separator(self, name):
         return self.SEPARATORS[name]
@@ -544,4 +553,4 @@ class CSVSource(Source):
 
     @property
     def coordinates_separator(self):
-        return self.settings.get("coordinate_separator")
+        return self.settings.get("coordinates_separator")
