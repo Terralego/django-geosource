@@ -335,6 +335,18 @@ class CSVSourceSerializer(FileSourceSerializer):
         validated_data.pop("coordinates_field")
         return validated_data
 
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        if data.get('coordinates_field') == 'one_column':
+            data.pop('latitude_field')
+            data.pop('longitude_field')
+
+        if data.get('coordinates_field') == 'two_columns':
+            data.pop('latlong_field')
+            data.pop('coordinates_field_count')
+            data.pop('coordinates_separator')
+        return data
+
     def validate(self, data):
         validated_data = super().validate(data)
         if data["settings"]["coordinates_field"] == "one_column":
