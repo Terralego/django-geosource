@@ -1,4 +1,11 @@
 
+0.4.6 / 2020-05-14
+==================
+
+  * Add refresh_data assertion in get_records tests
+  * Serializer do not return None value to representation
+  * Records name are string even with no header
+
 0.4.5 / 2020-05-13
 ==================
 
