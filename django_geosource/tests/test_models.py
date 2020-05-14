@@ -270,6 +270,7 @@ class ModelCSVSourceTestCase(TestCase):
         source = CSVSource.objects.create(
             file=source_name,
             geom_type=0,
+            id_field="ID",
             settings={
                 **self.base_settings,
                 "coordinates_field": "two_columns",
@@ -280,6 +281,9 @@ class ModelCSVSourceTestCase(TestCase):
         records = source._get_records()
         self.assertEqual(len(records), 6, len(records))
 
+        row_count = source.refresh_data()
+        self.assertEqual(row_count["count"], len(records), row_count)
+
     def test_get_records_with_one_column_coordinates(self):
         source_name = os.path.join(
             settings.BASE_DIR, "django_geosource", "tests", "source_xy.csv"
@@ -287,6 +291,7 @@ class ModelCSVSourceTestCase(TestCase):
         source = CSVSource.objects.create(
             file=source_name,
             geom_type=0,
+            id_field="ID",
             settings={
                 **self.base_settings,
                 "coordinates_field": "one_column",
@@ -297,6 +302,8 @@ class ModelCSVSourceTestCase(TestCase):
         )
         records = source._get_records()
         self.assertEqual(len(records), 9, len(records))
+        row_count = source.refresh_data()
+        self.assertEqual(row_count["count"], len(records), row_count)
 
     def test_get_records_with_decimal_separator_as_comma(self):
         source_name = os.path.join(
@@ -305,6 +312,7 @@ class ModelCSVSourceTestCase(TestCase):
         source = CSVSource.objects.create(
             file=source_name,
             geom_type=0,
+            id_field="ID",
             settings={
                 "encoding": "UTF-8",
                 "coordinate_reference_system": "EPSG_4326",
@@ -320,6 +328,8 @@ class ModelCSVSourceTestCase(TestCase):
         )
         records = source._get_records()
         self.assertEqual(len(records), 9, len(records))
+        row_count = source.refresh_data()
+        self.assertEqual(row_count["count"], len(records), row_count)
 
     def test_get_records_with_nulled_columns_ignored(self):
         source_name = os.path.join(
@@ -328,6 +338,7 @@ class ModelCSVSourceTestCase(TestCase):
         source = CSVSource.objects.create(
             file=source_name,
             geom_type=0,
+            id_field="ID",
             settings={
                 **self.base_settings,
                 "ignore_columns": True,
@@ -344,6 +355,8 @@ class ModelCSVSourceTestCase(TestCase):
             if record.get("photoEtablissement")
         ]
         self.assertEqual(len(empty_entry), 0, empty_entry)
+        row_count = source.refresh_data()
+        self.assertEqual(row_count["count"], len(records), row_count)
 
     def test_get_records_with_no_header_and_yx_csv(self):
         source_name = os.path.join(
@@ -352,6 +365,7 @@ class ModelCSVSourceTestCase(TestCase):
         source = CSVSource.objects.create(
             file=source_name,
             geom_type=0,
+            id_field="1",
             settings={
                 **self.base_settings,
                 "use_header": False,
@@ -363,3 +377,28 @@ class ModelCSVSourceTestCase(TestCase):
         )
         records = source._get_records()
         self.assertEqual(len(records), 9, len(records))
+
+        row_count = source.refresh_data()
+        self.assertEqual(row_count["count"], len(records), row_count)
+
+    def test_get_records_with_no_header_and_two_columns_csv(self):
+        source_name = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source_noheader.csv",
+        )
+        source = CSVSource.objects.create(
+            file=source_name,
+            geom_type=0,
+            id_field="2",
+            settings={
+                **self.base_settings,
+                "use_header": False,
+                "coordinate_reference_system": "EPSG_2154",
+                "coordinates_field": "two_columns",
+                "latitude_field": "1",
+                "longitude_field": "0",
+            },
+        )
+        records = source._get_records()
+        self.assertEqual(len(records), 10, len(records))
+        row_count = source.refresh_data()
+        self.assertEqual(row_count["count"], len(records), row_count)
