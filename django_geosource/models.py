@@ -484,7 +484,9 @@ class CSVSource(Source):
         if not self.settings.get("use_header"):
             # records names are the column index when no header was provided
             # casting to str to avoid issue (e.i id_field)
-            return {str(i): value for i, value in enumerate(row) if i not in ingored_columns}
+            return {
+                str(i): value for i, value in enumerate(row) if i not in ingored_columns
+            }
 
         return {
             name: value
