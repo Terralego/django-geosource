@@ -300,19 +300,21 @@ class CSVSourceSerializer(FileSourceSerializer):
         validated_data = super().to_internal_value(data)
         # settings does not exist if no group is specifed at creation
         settings = validated_data.get("settings", {})
-        settings.update({
-            "coordinate_reference_system": validated_data.pop(
-                "coordinate_reference_system"
-            ),
-            "encoding": validated_data.pop("encoding"),
-            "field_separator": validated_data.pop("field_separator"),
-            "decimal_separator": validated_data.pop("decimal_separator"),
-            "char_delimiter": validated_data.pop("char_delimiter"),
-            "coordinates_field": validated_data.get("coordinates_field"),
-            "number_lines_to_ignore": validated_data.pop("number_lines_to_ignore"),
-            "use_header": validated_data.pop("use_header"),
-            "ignore_columns": validated_data.pop("ignore_columns"),
-        })
+        settings.update(
+            {
+                "coordinate_reference_system": validated_data.pop(
+                    "coordinate_reference_system"
+                ),
+                "encoding": validated_data.pop("encoding"),
+                "field_separator": validated_data.pop("field_separator"),
+                "decimal_separator": validated_data.pop("decimal_separator"),
+                "char_delimiter": validated_data.pop("char_delimiter"),
+                "coordinates_field": validated_data.get("coordinates_field"),
+                "number_lines_to_ignore": validated_data.pop("number_lines_to_ignore"),
+                "use_header": validated_data.pop("use_header"),
+                "ignore_columns": validated_data.pop("ignore_columns"),
+            }
+        )
         if validated_data.get("coordinates_field") == "one_column":
             settings.update(
                 {
