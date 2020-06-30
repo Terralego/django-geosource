@@ -485,14 +485,18 @@ class CSVSource(Source):
             # records names are the column index when no header was provided
             # casting to str to avoid issue (e.i id_field)
             return {
-                str(i): value for i, value in enumerate(row) if i not in ingored_columns
+                str(i): self._format_cell_value(value)
+                for i, value in enumerate(row) if i not in ingored_columns
             }
 
         return {
-            name: value
+            name: self._format_cell_value(value)
             for i, (name, value) in enumerate(zip(sheet.colnames, row))
             if i not in ingored_columns
         }
+
+    def _format_cell_value(self, value):
+        return None if value == "" else value
 
     def _get_separator(self, name):
         return self.SEPARATORS[name]
