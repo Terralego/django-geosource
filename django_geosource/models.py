@@ -486,7 +486,8 @@ class CSVSource(Source):
             # casting to str to avoid issue (e.i id_field)
             return {
                 str(i): self._format_cell_value(value)
-                for i, value in enumerate(row) if i not in ingored_columns
+                for i, value in enumerate(row)
+                if i not in ingored_columns
             }
 
         return {
