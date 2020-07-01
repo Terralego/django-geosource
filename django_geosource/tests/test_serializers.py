@@ -83,7 +83,6 @@ class CSVSourceSerializerTestCase(TestCase):
         }
         csv_source = CSVSource.objects.create(**data)
         serializer = CSVSourceSerializer(csv_source)
-        self.assertIsNone(serializer.data.get("settings"))
 
         # assert at least one of the settings element is at root level in serializer data
         # if it works for one, it works for all the other
@@ -108,7 +107,6 @@ class CSVSourceSerializerTestCase(TestCase):
         }
         csv_source = CSVSource.objects.create(**data)
         serializer = CSVSourceSerializer(csv_source)
-        self.assertIsNone(serializer.data.get("settings"))
 
         # assert at least one of the settings element is at root level in serializer data
         # if it works for one, it works for all the other

@@ -294,26 +294,29 @@ class CSVSourceSerializer(FileSourceSerializer):
         fields = "__all__"
         extra_kwargs = {
             "file": {"write_only": True},
-            "settings": {"write_only": True},
         }
 
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)
-        validated_data["settings"] = {
-            "coordinate_reference_system": validated_data.pop(
-                "coordinate_reference_system"
-            ),
-            "encoding": validated_data.pop("encoding"),
-            "field_separator": validated_data.pop("field_separator"),
-            "decimal_separator": validated_data.pop("decimal_separator"),
-            "char_delimiter": validated_data.pop("char_delimiter"),
-            "coordinates_field": validated_data.get("coordinates_field"),
-            "number_lines_to_ignore": validated_data.pop("number_lines_to_ignore"),
-            "use_header": validated_data.pop("use_header"),
-            "ignore_columns": validated_data.pop("ignore_columns"),
-        }
+        # settings does not exist if no group is specifed at creation
+        settings = validated_data.get("settings", {})
+        settings.update(
+            {
+                "coordinate_reference_system": validated_data.pop(
+                    "coordinate_reference_system"
+                ),
+                "encoding": validated_data.pop("encoding"),
+                "field_separator": validated_data.pop("field_separator"),
+                "decimal_separator": validated_data.pop("decimal_separator"),
+                "char_delimiter": validated_data.pop("char_delimiter"),
+                "coordinates_field": validated_data.get("coordinates_field"),
+                "number_lines_to_ignore": validated_data.pop("number_lines_to_ignore"),
+                "use_header": validated_data.pop("use_header"),
+                "ignore_columns": validated_data.pop("ignore_columns"),
+            }
+        )
         if validated_data.get("coordinates_field") == "one_column":
-            validated_data["settings"].update(
+            settings.update(
                 {
                     "latlong_field": validated_data.pop("latlong_field"),
                     "coordinates_field_count": validated_data.pop(
@@ -326,13 +329,14 @@ class CSVSourceSerializer(FileSourceSerializer):
             )
 
         elif validated_data.get("coordinates_field") == "two_columns":
-            validated_data["settings"].update(
+            settings.update(
                 {
                     "latitude_field": validated_data.pop("latitude_field"),
                     "longitude_field": validated_data.pop("longitude_field"),
                 }
             )
         validated_data.pop("coordinates_field")
+        validated_data["settings"] = settings
         return validated_data
 
     def to_representation(self, obj):
