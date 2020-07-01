@@ -1,4 +1,11 @@
 
+0.4.7 / 2020-07-01
+==================
+
+  * Csv empty cell are recorded as None value
+  * Update test, CSVSource settings are not write only anymore
+  * Only update csvsource settings and make it readable
+
 0.4.6 / 2020-05-14
 ==================
 
