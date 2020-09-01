@@ -33,8 +33,7 @@ class SourceModelViewset(ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def refresh(self, request, pk):
-        """ Schedule a refresh now
-        """
+        """Schedule a refresh now"""
 
         source = self.get_object()
 

@@ -62,7 +62,8 @@ class ModelSourceViewsetTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            {"_type": "WrongSource's type is unknown"}, response.json(),
+            {"_type": "WrongSource's type is unknown"},
+            response.json(),
         )
 
     def test_list_view(self):
@@ -169,7 +170,9 @@ class ModelSourceViewsetTestCase(TestCase):
         }
 
         response = self.client.post(
-            reverse("geosource:geosource-list"), {**wmts_source}, format="json",
+            reverse("geosource:geosource-list"),
+            {**wmts_source},
+            format="json",
         )
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
@@ -298,13 +301,16 @@ class ModelSourceViewsetTestCase(TestCase):
         self.source_geojson.delete()
 
         obj = GeoJSONSource.objects.create(
-            name="foo", geom_type=GeometryTypes.Point.value,
+            name="foo",
+            geom_type=GeometryTypes.Point.value,
         )
         obj2 = CommandSource.objects.create(
-            name="bar", geom_type=GeometryTypes.LineString.value,
+            name="bar",
+            geom_type=GeometryTypes.LineString.value,
         )
         ShapefileSource.objects.create(
-            name="baz", geom_type=GeometryTypes.Polygon.value,
+            name="baz",
+            geom_type=GeometryTypes.Polygon.value,
         )
 
         list_url = reverse("geosource:geosource-list")

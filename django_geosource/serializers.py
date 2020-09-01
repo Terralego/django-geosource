@@ -176,8 +176,7 @@ class PostGISSourceSerializer(SourceSerializer):
         return cursor.fetchone()
 
     def _validate_geom(self, data):
-        """ Validate that geom_field exists else try to find it in source
-        """
+        """Validate that geom_field exists else try to find it in source"""
         first_record = self._first_record(data)
 
         if data.get("geom_field") is None:
@@ -199,7 +198,7 @@ class PostGISSourceSerializer(SourceSerializer):
         return data
 
     def _validate_query_connection(self, data):
-        """ Check if connection informations are valid or not, trying to
+        """Check if connection informations are valid or not, trying to
         connect to the Pg server and executing the query
         """
         try:

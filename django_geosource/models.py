@@ -143,7 +143,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
             self.clear_features(layer, begin_date)
 
         refresh_data_done.send_robust(
-            sender=self.__class__, layer=layer.pk,
+            sender=self.__class__,
+            layer=layer.pk,
         )
 
         return {"count": row_count}
@@ -157,12 +158,14 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         for record in records:
             record.pop(self.SOURCE_GEOM_ATTRIBUTE)
 
-            for field_name, value in record.items():
+            for i, (field_name, value) in enumerate(record.items()):
                 is_new = False
 
                 if field_name not in fields:
                     field, is_new = self.fields.get_or_create(
-                        name=field_name, defaults={"label": field_name}
+                        name=field_name,
+                        defaults={"label": field_name},
+                        order=i,
                     )
                     field.sample = []
                     fields[field_name] = field
@@ -231,17 +234,20 @@ class Field(models.Model):
     )
     level = models.IntegerField(default=0)
     sample = JSONField(default=list)
+    order = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.name} ({self.source.name} - {self.data_type})"
 
     class Meta:
         unique_together = ["source", "name"]
+        ordering = ("order",)
 
 
 class PostGISSource(Source):
     db_host = models.CharField(
-        max_length=255, validators=[RegexValidator(regex=HOST_REGEX)],
+        max_length=255,
+        validators=[RegexValidator(regex=HOST_REGEX)],
     )
     db_port = models.IntegerField(default=5432)
     db_username = models.CharField(max_length=63)
