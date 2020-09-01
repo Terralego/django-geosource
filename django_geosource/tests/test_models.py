@@ -238,7 +238,10 @@ class ModelCommandSourceTestCase(TestCase):
 class ModelWMTSSourceTestCase(TestCase):
     def setUp(self):
         self.source = WMTSSource.objects.create(
-            name="Titi", geom_type=GeometryTypes.Point.value, tile_size=256, minzoom=14,
+            name="Titi",
+            geom_type=GeometryTypes.Point.value,
+            tile_size=256,
+            minzoom=14,
         )
 
     def test_get_records(self):
@@ -333,7 +336,10 @@ class ModelCSVSourceTestCase(TestCase):
 
     def test_get_records_with_nulled_columns_ignored(self):
         source_name = os.path.join(
-            settings.BASE_DIR, "django_geosource", "tests", "source.csv",
+            settings.BASE_DIR,
+            "django_geosource",
+            "tests",
+            "source.csv",
         )
         source = CSVSource.objects.create(
             file=source_name,
@@ -360,7 +366,10 @@ class ModelCSVSourceTestCase(TestCase):
 
     def test_get_records_with_no_header_and_yx_csv(self):
         source_name = os.path.join(
-            settings.BASE_DIR, "django_geosource", "tests", "source_xy_noheader.csv",
+            settings.BASE_DIR,
+            "django_geosource",
+            "tests",
+            "source_xy_noheader.csv",
         )
         source = CSVSource.objects.create(
             file=source_name,
@@ -383,7 +392,10 @@ class ModelCSVSourceTestCase(TestCase):
 
     def test_get_records_with_no_header_and_two_columns_csv(self):
         source_name = os.path.join(
-            settings.BASE_DIR, "django_geosource", "tests", "source_noheader.csv",
+            settings.BASE_DIR,
+            "django_geosource",
+            "tests",
+            "source_noheader.csv",
         )
         source = CSVSource.objects.create(
             file=source_name,
@@ -402,3 +414,26 @@ class ModelCSVSourceTestCase(TestCase):
         self.assertEqual(len(records), 10, len(records))
         row_count = source.refresh_data()
         self.assertEqual(row_count["count"], len(records), row_count)
+
+    def test_update_fields_keep_order(self):
+        source_name = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source.csv"
+        )
+        source = CSVSource.objects.create(
+            file=source_name,
+            geom_type=0,
+            id_field="ID",
+            settings={
+                **self.base_settings,
+                "coordinates_field": "two_columns",
+                "longitude_field": "XCOORD",
+                "latitude_field": "YCOORD",
+            },
+        )
+        sheet = source.get_file_as_sheet()
+        sheet.name_columns_by_row(0)
+        colnames = [name for name in sheet.colnames if name not in ("XCOORD", "YCOORD")]
+
+        source.update_fields()
+        fields = [f.name for f in Field.objects.filter(source=source)]
+        self.assertTrue(fields == colnames)

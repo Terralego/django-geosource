@@ -19,8 +19,7 @@ class CeleryCallMethodsMixin:
 
     @property
     def can_sync(self):
-        """ Property containing a boolean that tell if the state allow to run a sync
-        """
+        """Property containing a boolean that tell if the state allow to run a sync"""
         status = self.get_status()
 
         return status.get("state") in self.DONE_STATUSES or (
@@ -30,7 +29,7 @@ class CeleryCallMethodsMixin:
         )
 
     def run_async_method(self, method, success_state=states.SUCCESS, force=False):
-        """ Schedule an async task that will be runned by celery.
+        """Schedule an async task that will be runned by celery.
         Raises an error if a task is already running or scheduled, can be forced with
         `force` argument.
         """
@@ -49,7 +48,7 @@ class CeleryCallMethodsMixin:
         raise MethodNotAllowed("One job is still running on this source")
 
     def run_sync_method(self, method, success_state=states.SUCCESS):
-        """ Run an object method in a synchrone mode.
+        """Run an object method in a synchrone mode.
         The success state of the task can be defined with the `success_state` argument.
         """
         task_job = run_model_object_method.apply(
