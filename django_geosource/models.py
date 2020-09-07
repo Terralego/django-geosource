@@ -46,6 +46,7 @@ class FieldTypes(Enum):
     Float = auto()
     Boolean = auto()
     Undefined = auto()
+    Date = auto()
 
     def _generate_next_value_(self, name, start, count, last_values):
         return name.lower()
