@@ -8,18 +8,35 @@ import django_geosource.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0016_auto_20200506_1444'),
+        ("django_geosource", "0016_auto_20200506_1444"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='field',
-            name='data_type',
-            field=models.IntegerField(choices=[(1, django_geosource.models.FieldTypes['String']), (2, django_geosource.models.FieldTypes['Integer']), (3, django_geosource.models.FieldTypes['Float']), (4, django_geosource.models.FieldTypes['Boolean']), (5, django_geosource.models.FieldTypes['Undefined']), (6, django_geosource.models.FieldTypes['Date'])], default=5),
+            model_name="field",
+            name="data_type",
+            field=models.IntegerField(
+                choices=[
+                    (1, django_geosource.models.FieldTypes["String"]),
+                    (2, django_geosource.models.FieldTypes["Integer"]),
+                    (3, django_geosource.models.FieldTypes["Float"]),
+                    (4, django_geosource.models.FieldTypes["Boolean"]),
+                    (5, django_geosource.models.FieldTypes["Undefined"]),
+                    (6, django_geosource.models.FieldTypes["Date"]),
+                ],
+                default=5,
+            ),
         ),
         migrations.AlterField(
-            model_name='postgissource',
-            name='db_host',
-            field=models.CharField(max_length=255, validators=[django.core.validators.RegexValidator(regex='(?:(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\[[0-9a-f:.]+\\]|([a-z¡-\uffff0-9](?:[a-z¡-\uffff0-9-]{0,61}[a-z¡-\uffff0-9])?(?:\\.(?!-)[a-z¡-\uffff0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z¡-\uffff-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))')]),
+            model_name="postgissource",
+            name="db_host",
+            field=models.CharField(
+                max_length=255,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        regex="(?:(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\[[0-9a-f:.]+\\]|([a-z¡-\uffff0-9](?:[a-z¡-\uffff0-9-]{0,61}[a-z¡-\uffff0-9])?(?:\\.(?!-)[a-z¡-\uffff0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z¡-\uffff-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))"
+                    )
+                ],
+            ),
         ),
     ]
