@@ -86,6 +86,7 @@ class GeometryTypes(IntEnum):
 
 class Source(PolymorphicModel, CeleryCallMethodsMixin):
     name = models.CharField(max_length=255, unique=True)
+    credit = models.TextField(blank=True)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
