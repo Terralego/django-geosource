@@ -1,4 +1,11 @@
 
+0.4.8 / 2020-10-07
+==================
+
+  * Fields order is kept from the source
+  * Add credit field on Source
+  * Add date as a field type
+
 0.4.7 / 2020-07-01
 ==================
 
