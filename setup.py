@@ -15,6 +15,7 @@ test_require = [
     "flake8",
     "coverage",
     "django-geostore",
+    "black",
 ]
 
 setup(
