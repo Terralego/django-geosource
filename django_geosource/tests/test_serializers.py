@@ -115,42 +115,42 @@ class CSVSourceSerializerTestCase(TestCase):
             csv_source.settings["coordinate_reference_system"],
         )
 
-        def test_missing_lat_and_long_field_raise_errors(self):
-            csv = SimpleUploadedFile(name="test.csv", content=b"some content")
-            data = {
-                "file": [csv],
-                "_type": "CSVSource",
-                "name": "test",
-                "encoding": "UTF-8",
-                "coordinate_reference_system": "EPSG_4326",
-                "coordinates_field": "two_columns",
-                "field_separator": "semicolon",
-                "decimal_separator": "comma",
-                "char_delimiter": "doublequote",
-                "number_lines_to_ignore": 0,
-                "use_header": True,
-            }
-            serializer = CSVSourceSerializer(data=data)
-            with self.assertRaises(CSVSourceSerializer.ValidationError):
-                serializer.is_valid()
-                self.assertEqual(len(serializer.errors), 2)
+    def test_missing_lat_and_long_field_raise_errors(self):
+        csv = SimpleUploadedFile(name="test.csv", content=b"some content")
+        data = {
+            "file": [csv],
+            "_type": "CSVSource",
+            "name": "test",
+            "encoding": "UTF-8",
+            "coordinate_reference_system": "EPSG_4326",
+            "coordinates_field": "two_columns",
+            "field_separator": "semicolon",
+            "decimal_separator": "comma",
+            "char_delimiter": "doublequote",
+            "number_lines_to_ignore": 0,
+            "use_header": True,
+        }
+        serializer = CSVSourceSerializer(data=data)
+        with self.assertRaises(KeyError):
+            serializer.is_valid()
+            self.assertEqual(len(serializer.errors), 2)
 
-        def test_missing_lnglat_separator_and_field_info_raise_errors(self):
-            csv = SimpleUploadedFile(name="test.csv", content=b"some content")
-            data = {
-                "file": [csv],
-                "_type": "CSVSource",
-                "name": "test",
-                "encoding": "UTF-8",
-                "coordinate_reference_system": "EPSG_4326",
-                "coordinates_field": "one_column",
-                "field_separator": "semicolon",
-                "decimal_separator": "comma",
-                "char_delimiter": "doublequote",
-                "number_lines_to_ignore": 0,
-                "use_header": True,
-            }
-            serializer = CSVSourceSerializer(data=data)
-            with self.assertRaises(CSVSourceSerializer.ValidationError):
-                serializer.is_valid()
-                self.assertEqual(len(serializer.errors), 3)
+    def test_missing_lnglat_separator_and_field_info_raise_errors(self):
+        csv = SimpleUploadedFile(name="test.csv", content=b"some content")
+        data = {
+            "file": [csv],
+            "_type": "CSVSource",
+            "name": "test",
+            "encoding": "UTF-8",
+            "coordinate_reference_system": "EPSG_4326",
+            "coordinates_field": "one_column",
+            "field_separator": "semicolon",
+            "decimal_separator": "comma",
+            "char_delimiter": "doublequote",
+            "number_lines_to_ignore": 0,
+            "use_header": True,
+        }
+        serializer = CSVSourceSerializer(data=data)
+        with self.assertRaises(KeyError):
+            serializer.is_valid()
+            self.assertEqual(len(serializer.errors), 3)

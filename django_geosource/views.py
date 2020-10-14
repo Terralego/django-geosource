@@ -7,13 +7,12 @@ from rest_framework.viewsets import ModelViewSet
 from .models import Source
 from .parsers import NestedMultipartJSONParser
 from .permissions import SourcePermission
-from .serializers import SourceSerializer
+from .serializers import SourceListSerializer, SourceSerializer
 
 
 class SourceModelViewset(ModelViewSet):
     model = Source
     parser_classes = (JSONParser, NestedMultipartJSONParser)
-    serializer_class = SourceSerializer
     permission_classes = (SourcePermission,)
     ordering_fields = (
         "name",
@@ -27,6 +26,11 @@ class SourceModelViewset(ModelViewSet):
         "geom_type",
     )
     search_fields = ["name"]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return SourceListSerializer
+        return SourceSerializer
 
     def get_queryset(self):
         return self.model.objects.all()

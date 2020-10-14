@@ -155,6 +155,27 @@ class SourceSerializer(PolymorphicModelSerializer):
         return instance.get_status()
 
 
+class SourceListSerializer(ModelSerializer):
+    _type = SerializerMethodField()
+    status = SerializerMethodField()
+
+    class Meta:
+        model = Source
+        fields = (
+            "id",
+            "_type",
+            "status",
+            "name",
+            "geom_type",
+        )
+
+    def get__type(self, instance):
+        return instance.__class__.__name__
+
+    def get_status(self, instance):
+        return instance.get_status()
+
+
 class PostGISSourceSerializer(SourceSerializer):
     id_field = CharField(required=False)
     geom_field = CharField(required=False, allow_null=True)
