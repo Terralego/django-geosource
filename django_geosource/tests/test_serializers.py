@@ -1,5 +1,7 @@
 import os
+from unittest.mock import patch
 
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
@@ -14,18 +16,21 @@ class CSVSourceSerializerTestCase(TestCase):
             "encoding": "UTF-8",
             "coordinate_reference_system": "EPSG_4326",
             "field_separator": "semicolon",
-            "decimal_separator": "comma",
+            "decimal_separator": "point",
             "char_delimiter": "doublequote",
             "number_lines_to_ignore": 0,
             "use_header": True,
             "ignore_columns": False,
         }
+        csv_path = os.path.join(
+            settings.BASE_DIR, "django_geosource", "tests", "source.csv"
+        )
+        with open(csv_path, "r") as f:
+            cls.csv = SimpleUploadedFile(f.name, bytes(f.read(), "UTF-8"))
 
-    def tearDown(self):
-        for source in CSVSource.objects.all():
-            os.remove(source.file.path)
-
-    def test_to_internal_value_put_data_into_settings(self):
+    # mock validation method, the file validity does not matter for this test
+    @patch.object(CSVSourceSerializer, "_validate_field_infos")
+    def test_to_internal_value_put_data_into_settings(self, mocked_method):
         csv = SimpleUploadedFile(name="test.csv", content=b"some content")
         settings = {
             **self.settings_data,
@@ -47,7 +52,9 @@ class CSVSourceSerializerTestCase(TestCase):
             CSVSource.objects.filter(settings=settings).exists(), serializer.errors
         )
 
-    def test_to_internal_value_put_one_columns_data_into_settings(self):
+    # mock validation method, the file validity does not matter for this test
+    @patch.object(CSVSourceSerializer, "_validate_field_infos")
+    def test_to_internal_value_put_one_columns_data_into_settings(self, mocked_method):
         csv = SimpleUploadedFile(name="test.csv", content=b"some content")
         settings = {
             **self.settings_data,

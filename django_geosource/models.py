@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import datetime
 from enum import Enum, IntEnum, auto
 
@@ -25,7 +24,6 @@ from .fields import LongURLField
 from .mixins import CeleryCallMethodsMixin
 from .signals import refresh_data_done
 
-logger = logging.getLogger(__name__)
 
 # Decimal fields must be returned as float
 DEC2FLOAT = psycopg2.extensions.new_type(
@@ -94,6 +92,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     geom_type = models.IntegerField(choices=GeometryTypes.choices())
 
     settings = JSONField(default=dict)
+    report = JSONField(default=dict)
 
     task_id = models.CharField(null=True, max_length=255)
     task_date = models.DateTimeField(null=True)
@@ -126,30 +125,42 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         return super().save(*args, **kwargs)
 
     def refresh_data(self):
+        report = {}
         with transaction.atomic():
             layer = self.get_layer()
             begin_date = datetime.now()
             row_count = 0
+            total = 0
 
-            for row in self._get_records():
+            for i, row in enumerate(self._get_records()):
+                total += 1
                 geometry = row.pop(self.SOURCE_GEOM_ATTRIBUTE)
                 try:
                     identifier = row[self.id_field]
                 except KeyError:
-                    raise Exception(
-                        "Can't find identifier field in one or more records"
-                    )
+                    msg = "Can't find identifier field for this record"
+                    report["status"] = "Warning"
+                    report.setdefault("message", []).append(msg)
+                    report.setdefault("lines", {}).setdefault(f"{i}", []).append(msg)
+                    continue
                 self.update_feature(layer, identifier, geometry, row)
                 row_count += 1
-
             self.clear_features(layer, begin_date)
+
+        self.report = report
+        if not row_count:
+            self.report["status"] = "Error"
+            self.save(update_fields=["report"])
+            raise Exception("Failed to refresh data")
 
         refresh_data_done.send_robust(
             sender=self.__class__,
             layer=layer.pk,
         )
-
-        return {"count": row_count}
+        if row_count == total:
+            self.report["status"] = "success"
+            self.save(update_fields=["report"])
+        return {"count": row_count, "total": total}
 
     @transaction.atomic
     def update_fields(self):
@@ -186,9 +197,12 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
                         try:
                             value = value.decode()
                         except (UnicodeDecodeError, AttributeError):
-                            logger.warning(
-                                f"{field_name} couldn't be decoded for source {self.pk}"
-                            )
+                            msg = f"{field_name} couldn't be decoded for source {self.name}"
+                            self.report["status"] = "Warning"
+                            self.report.setdefault("lines", {}).setdefault(
+                                f"{i}", []
+                            ).append(msg)
+                            self.save()
                             continue
 
                     fields[field_name].sample.append(value)
@@ -268,13 +282,19 @@ class PostGISSource(Source):
 
     @property
     def _db_connection(self):
-        conn = psycopg2.connect(
-            user=self.db_username,
-            password=self.db_password,
-            host=self.db_host,
-            port=self.db_port,
-            dbname=self.db_name,
-        )
+        try:
+            conn = psycopg2.connect(
+                user=self.db_username,
+                password=self.db_password,
+                host=self.db_host,
+                port=self.db_port,
+                dbname=self.db_name,
+            )
+        except psycopg2.errors.OperationalError as err:
+            self.report["status"] = "Error"
+            self.report.setdefault("message", []).append(err.args[0])
+            self.save()
+            raise
         return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     def _get_records(self, limit=None):
@@ -298,7 +318,10 @@ class GeoJSONSource(Source):
         try:
             return json.load(self.file)
         except json.JSONDecodeError:
-            logger.info("Source's GeoJSON file is not valid")
+            msg = "Source's GeoJSON file is not valid"
+            self.report["status"] = "Error"
+            self.report.setdefault("message", []).append(msg)
+            self.save()
             raise
 
     def _get_records(self, limit=None):
@@ -307,7 +330,7 @@ class GeoJSONSource(Source):
         limit = limit if limit else len(geojson["features"])
 
         records = []
-        for record in geojson["features"][:limit]:
+        for i, record in enumerate(geojson["features"][:limit]):
             try:
                 records.append(
                     {
@@ -318,9 +341,11 @@ class GeoJSONSource(Source):
                     }
                 )
             except (ValueError, GDALException):
-                raise ValueError(
-                    f"One of source's record has bad geometry: {record['geometry']}"
-                )
+                msg = "The record geometry seems invalid."
+                self.report["status"] = "Warning"
+                self.report.setdefault("line", {}).setdefault(f"{i}", []).append(msg)
+                self.save()
+                raise ValueError(msg)
 
         return records
 
@@ -407,10 +432,13 @@ class CSVSource(Source):
                 encoding=self.settings["encoding"],
                 quotechar=quotechar,
             )
-        except pyexcel.exceptions.FileTypeNotSupported as err:
-            msg = "Source's CSV file is not valid"
-            logger.info(msg)
-            err.message = msg  # new message for the user
+        # Exception is raised if no parser found
+        except (pyexcel.exceptions.FileTypeNotSupported, Exception) as err:
+            msg = "Provided CSV file is invalid"
+            self.report["status"] = "Error"
+            self.report.setdefault("message", []).append(msg)
+            self.save()
+            err.args = (msg,)  # new message for the user
             raise
 
     def _get_records(self, limit=None):
@@ -426,7 +454,10 @@ class CSVSource(Source):
 
         records = []
         srid = self._get_srid()
-        for row in sheet:
+        row_count = 0
+        total = 0
+        for i, row in enumerate(sheet):
+            total += 1
             if self.settings["coordinates_field"] == "two_columns":
                 lat_field = self.settings["latitude_field"]
                 lng_field = self.settings["longitude_field"]
@@ -437,7 +468,12 @@ class CSVSource(Source):
                 ignored_field = (row.index(x), row.index(y), *ignored_columns)
             else:
                 lnglat_field = self.settings["latlong_field"]
-                x, y = self._extract_coordinates(row, sheet.colnames, [lnglat_field])
+                try:
+                    x, y = self._extract_coordinates(
+                        row, sheet.colnames, [lnglat_field]
+                    )
+                except ValueError:
+                    continue
                 coord_fields = (
                     (sheet.colnames.index(lnglat_field),)
                     if self.settings.get("use_header")
@@ -446,23 +482,49 @@ class CSVSource(Source):
                 ignored_field = (*coord_fields, *ignored_columns)
 
             cells = self._get_cells(sheet, row, ignored_field)
-            records.append(
-                {
-                    self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
-                        f"Point({x} {y})", srid=srid
-                    ),
-                    **cells,
-                }
+            try:
+                records.append(
+                    {
+                        self.SOURCE_GEOM_ATTRIBUTE: GEOSGeometry(
+                            f"Point({x} {y})", srid=srid
+                        ),
+                        **cells,
+                    }
+                )
+            except (ValueError, GDALException):
+                msg = f"One of source's record has invalid geometry: Point({x} {y}) srid={srid}"
+                self.report["status"] = "Warning"
+                self.report.setdefault("message", []).append(msg)
+                self.save()
+                # raise ValueError(msg)
+                continue
+            row_count += 1
+        if not row_count:
+            self.report["status"] = "Error"
+            self.report.setdefault("message", []).append(
+                "No record could be imported, check the report"
             )
+        elif row_count == total:
+            self.report["status"] = "Success"
         return records
 
     def _extract_coordinates(self, row, colnames, fields):
         coords = []
         for field in fields:
             # if no header, we expect index for the columns has been provided
-            field_index = (
-                colnames.index(field) if self.settings.get("use_header") else int(field)
-            )
+            try:
+                field_index = (
+                    colnames.index(field)
+                    if self.settings.get("use_header")
+                    else int(field)
+                )
+            except ValueError as err:
+                msg = f"{field} is not a valid coordinate field"
+                self.report["status"] = "Warning"
+                self.report.setdefault("message", []).append(msg)
+                self.save()
+                err.args = (msg,)
+                raise
             c = row[field_index]
             coords.append(c)
         if len(coords) == 2:
@@ -511,7 +573,16 @@ class CSVSource(Source):
         return self.SEPARATORS[name]
 
     def _get_srid(self):
-        return int(self.settings["coordinate_reference_system"].split("_")[1])
+        coordinate_reference_system = self.settings["coordinate_reference_system"]
+        try:
+            return int(coordinate_reference_system.split("_")[1])
+        except (IndexError, ValueError) as err:
+            msg = f"Invalid SRID: {coordinate_reference_system}"
+            self.report["status"] = "Error"
+            self.report.setdefault("message", []).append(msg)
+            self.save()
+            err.args = (msg,)
+            raise
 
     # properties are use by serializer for representation (reading operation)
     @property

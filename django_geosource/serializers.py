@@ -1,7 +1,9 @@
 from os.path import basename
 
 import psycopg2
+import requests
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.gdal.error import GDALException
 from django.db import transaction
 from django.utils.translation import ugettext as _
 from psycopg2 import sql
@@ -262,6 +264,36 @@ class GeoJSONSourceSerializer(FileSourceSerializer):
         fields = "__all__"
         extra_kwargs = {"file": {"write_only": True}}
 
+    def _validate_field_infos(self, data):
+        # remove _type field as it is not needed by the model
+        # but it's must stay in the data used later by the serializer
+        data_copy = {**data}
+        data_copy.pop("_type")
+        if data_copy.get("fields") and not data_copy.get("file"):
+            return  # file fields is empty in update
+        # create an instance without saving data
+        try:
+            instance = self.Meta.model(**data_copy)
+        except TypeError:
+            return  # file field is empty in update no get_records
+        try:
+            records = instance._get_records(1)
+        except Exception as err:
+            raise ValidationError(err.args[0])
+
+        # validating id in records
+        for i, row in enumerate(records):
+            try:
+                _ = row[instance.id_field]  # noqa
+            except Exception:
+                raise ValidationError(
+                    f"Can't find identifier field at the record index {i}"
+                )
+
+    def validate(self, data):
+        self._validate_field_infos(data)
+        return super().validate(data)
+
 
 class ShapefileSourceSerializer(FileSourceSerializer):
     class Meta:
@@ -287,6 +319,27 @@ class WMTSSourceSerialize(SourceSerializer):
     class Meta:
         model = WMTSSource
         fields = "__all__"
+
+    def validate(self, data):
+        # We do not use validate_url hook method
+        # we wan't to return a non_field_errors for the front-end
+        # replace x,y,z placeholder with value in the wmts url
+        url = (
+            data.get("url", "")
+            .replace("{z}", "1")
+            .replace("{y}", "1")
+            .replace("{x}", "1")
+        )
+        try:
+            r = requests.get(url)
+        except requests.ConnectionError:
+            raise ValidationError("Can't reach specified tile server. Check your url.")
+
+        if not r.status_code == 200:
+            raise ValidationError(
+                f"The tile server response is invalid (status code = {r.status_code})."
+            )
+        return super().validate(data)
 
 
 class CSVSourceSerializer(FileSourceSerializer):
@@ -371,7 +424,31 @@ class CSVSourceSerializer(FileSourceSerializer):
             data.pop("coordinates_separator")
         return data
 
+    def _validate_field_infos(self, data):
+        # remove _type field as it is not needed by the model
+        # but it's must stay in the data used later by the serializer
+        data_copy = {**data}
+        data_copy.pop("_type")
+        if data_copy.get("fields") and not data_copy.get("file"):
+            return  # file fields is empty in update
+        # create an instance without saving data
+        instance = self.Meta.model(**data_copy)
+        try:
+            records = instance._get_records(1)
+        except (ValueError, GDALException) as err:
+            raise ValidationError(err.args[0])
+
+        # validating id in records
+        for row in records:
+            try:
+                _ = row[instance.id_field]  # noqa
+            except KeyError:
+                raise ValidationError(
+                    "Can't find identifier field in one or more records"
+                )
+
     def validate(self, data):
+        self._validate_field_infos(data)
         validated_data = super().validate(data)
         if data["settings"]["coordinates_field"] == "one_column":
             if not data["settings"].get("latlong_field"):

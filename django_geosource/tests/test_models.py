@@ -104,9 +104,7 @@ class ModelSourceTestCase(TestCase):
     def test_wrong_identifier_refresh(self):
         self.geojson_source.id_field = "wrong_identifier"
         self.geojson_source.save()
-        with self.assertRaisesRegexp(
-            Exception, "Can't find identifier field in one or more records"
-        ):
+        with self.assertRaisesRegexp(Exception, "Failed to refresh data"):
             self.geojson_source.refresh_data()
 
     def test_delete(self):
@@ -200,8 +198,7 @@ class ModelGeoJSONSourceTestCase(TestCase):
         with self.assertRaises(ValueError) as m:
             source._get_records(1)
         self.assertEqual(
-            "One of source's record has bad geometry: {'type': 'LineString', "
-            "'coordinates': [3.0808067321777344, 45.77488685869771]}",
+            "The record geometry seems invalid.",
             str(m.exception),
         )
 
