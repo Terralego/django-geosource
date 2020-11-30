@@ -177,7 +177,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
                 if field_name not in fields:
                     field, is_new = self.fields.get_or_create(
                         name=field_name,
-                        defaults={"label": field_name, "order": i},
+                        defaults={"label": field_name},
                     )
                     field.order = i  # force order for update
                     field.sample = []
