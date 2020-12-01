@@ -1,4 +1,10 @@
 
+0.4.10 / 2020-12-01
+==================
+
+  * Add property values list endpoint
+  * [Bug] Force order update & add it to default
+
 0.4.9 / 2020-10-15
 ==================
 
