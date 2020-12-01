@@ -351,3 +351,39 @@ class ModelSourceViewsetTestCase(TestCase):
         data = response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["name"], obj2.name)
+
+    def test_property_values(self):
+        source = GeoJSONSource.objects.create(
+            name="foo",
+            geom_type=GeometryTypes.Point.value,
+        )
+
+        class FakeLayer:
+            def get_property_values(self, property):
+                return ["fake", "list"]
+
+        with patch(
+            "django_geosource.geostore_callbacks.layer_callback",
+            MagicMock(return_value=FakeLayer()),
+        ):
+            response = self.client.get(
+                reverse(
+                    "geosource:geosource-property-values",
+                    args=[
+                        source.pk,
+                    ],
+                ),
+                {"property": "country"},
+            )
+            self.assertEqual(response.status_code, HTTP_200_OK)
+            self.assertEqual(response.json(), ["fake", "list"])
+
+            response = self.client.get(
+                reverse(
+                    "geosource:geosource-property-values",
+                    args=[
+                        source.pk,
+                    ],
+                ),
+            )
+            self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
