@@ -178,8 +178,8 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
                     field, is_new = self.fields.get_or_create(
                         name=field_name,
                         defaults={"label": field_name},
-                        order=i,
                     )
+                    field.order = i  # force order for update
                     field.sample = []
                     fields[field_name] = field
 
