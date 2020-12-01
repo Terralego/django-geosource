@@ -46,9 +46,6 @@ class FieldTypes(Enum):
     Undefined = auto()
     Date = auto()
 
-    def _generate_next_value_(self, name, start, count, last_values):
-        return name.lower()
-
     @classmethod
     def choices(cls):
         return [(enum.value, enum) for enum in cls]
