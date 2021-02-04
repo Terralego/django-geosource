@@ -448,7 +448,9 @@ class CSVSourceSerializer(FileSourceSerializer):
                 )
 
     def validate(self, data):
-        self._validate_field_infos(data)
+        # do not use this for now as it cause file creation to bug
+        # FileNotFoundError is raised with the wrong file path
+        # self._validate_field_infos(data)
         validated_data = super().validate(data)
         if data["settings"]["coordinates_field"] == "one_column":
             if not data["settings"].get("latlong_field"):
