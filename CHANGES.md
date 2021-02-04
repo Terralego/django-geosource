@@ -1,4 +1,8 @@
 
+0.4.11 / 2021-02-04
+==================
+  * Disable record validation in CSVSourceSerialiser
+
 0.4.10 / 2020-12-01
 ==================
 
