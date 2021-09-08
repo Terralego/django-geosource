@@ -1,4 +1,9 @@
 
+0.4.12 / 2021-09-08
+==================
+
+  * Fix scheduler
+
 0.4.11 / 2021-02-04
 ==================
   * Disable record validation in CSVSourceSerialiser
