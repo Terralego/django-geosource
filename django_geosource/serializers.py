@@ -54,7 +54,7 @@ class PolymorphicModelSerializer(ModelSerializer):
         return super().__new__(cls, *args, **kwargs)
 
     def __init_subclass__(cls, **kwargs):
-        """ Create a registry of all subclasses of the current class """
+        """Create a registry of all subclasses of the current class"""
         if cls.Meta.model:
             cls.type_class_map[cls.Meta.model.__name__] = cls
 
