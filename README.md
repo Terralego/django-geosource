@@ -21,8 +21,29 @@ You also need to create the celery app following this [documentation](https://do
 Then to run the celery worker:
 `$ celery worker -A django_geosource -l info`
 
-To run the celery beat worker that allow to synchronize periodically sources, launch this command:
-`$ celery beat --scheduler django_geosource.celery.schedulers.GeosourceScheduler -A django_geosource -l info`
+To run periodic tasks, use celery beat:
+
+```python
+
+from celery import Celery
+from celery.schedules import crontab
+
+app = Celery()
+
+@app.after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    # Calls refresh check every 30 minutes
+    sender.add_periodic_task(60.0 * 30, run_auto_refresh_source.s())
+
+@app.task
+def run_auto_refresh_source():
+    from django_geosource.periodics import auto_refresh_source
+
+    auto_refresh_source()
+```
+
+Then run celery beat worker that allow to synchronize periodically sources, launch this command:
+`$ celery beat -A django_geosource -l info`
 
 ## Configure data destination
 

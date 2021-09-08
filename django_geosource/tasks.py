@@ -49,3 +49,10 @@ def run_model_object_method(self, app, model, pk, method, success_state=states.S
         logger.error(e, exc_info=True)
 
     raise Ignore()
+
+
+@shared_task(bind=True)
+def run_auto_refresh_source():
+    from django_geosource.periodics import auto_refresh_source
+
+    auto_refresh_source()

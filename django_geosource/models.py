@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum, IntEnum, auto
 
 import fiona
@@ -9,11 +9,17 @@ from celery.result import AsyncResult
 from django.conf import settings
 from django.contrib.gis.gdal.error import GDALException
 from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.postgres.fields import JSONField
+
+try:
+    from django.db.models import JSONField
+except ImportError:  # TODO Remove when dropping Django releases < 3.1
+    from django.contrib.postgres.fields import JSONField
+
 from django.core.management import call_command
 from django.core.validators import RegexValidator, URLValidator
 from django.db import models, transaction
 from django.utils.text import slugify
+from django.utils import timezone
 from polymorphic.models import PolymorphicModel
 from psycopg2 import sql
 
@@ -95,6 +101,7 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
     task_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_refresh = models.DateTimeField(default=timezone.now)
 
     SOURCE_GEOM_ATTRIBUTE = "_geom_"
     MAX_SAMPLE_DATA = 5
@@ -121,7 +128,26 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
         self.slug = slugify(self.name)
         return super().save(*args, **kwargs)
 
+    def should_refresh(self):
+        now = timezone.now()
+        if not getattr(self, "refresh", None) or self.refresh < 1:
+            return False
+        next_run = self.last_refresh + timedelta(minutes=self.refresh)
+        return next_run < now
+
     def refresh_data(self):
+        try:
+            return self._refresh_data()
+        finally:
+            self.last_refresh = timezone.now()
+            self.save()
+            layer = self.get_layer()
+            refresh_data_done.send_robust(
+                sender=self.__class__,
+                layer=layer.pk,
+            )
+
+    def _refresh_data(self):
         report = {}
         with transaction.atomic():
             layer = self.get_layer()
@@ -150,10 +176,6 @@ class Source(PolymorphicModel, CeleryCallMethodsMixin):
             self.save(update_fields=["report"])
             raise Exception("Failed to refresh data")
 
-        refresh_data_done.send_robust(
-            sender=self.__class__,
-            layer=layer.pk,
-        )
         if row_count == total:
             self.report["status"] = "success"
             self.save(update_fields=["report"])
