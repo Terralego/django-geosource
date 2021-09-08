@@ -28,18 +28,27 @@ class CeleryCallMethodsMixin:
             and self.task_date < now() - timedelta(hours=MAX_TASK_RUNTIME)
         )
 
-    def run_async_method(self, method, success_state=states.SUCCESS, force=False):
+    def run_async_method(
+        self,
+        method,
+        success_state=states.SUCCESS,
+        force=False,
+        countdown=None,
+    ):
         """Schedule an async task that will be runned by celery.
         Raises an error if a task is already running or scheduled, can be forced with
         `force` argument.
         """
         if self.can_sync or force:
-            task_job = run_model_object_method.delay(
-                self._meta.app_label,
-                self.__class__.__name__,
-                self.pk,
-                method,
-                success_state,
+            task_job = run_model_object_method.apply_async(
+                (
+                    self._meta.app_label,
+                    self.__class__.__name__,
+                    self.pk,
+                    method,
+                    success_state,
+                ),
+                countdown=countdown,
             )
 
             self.update_status(task_job)
