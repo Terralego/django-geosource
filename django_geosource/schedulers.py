@@ -20,6 +20,9 @@ class SourceEntry(ScheduleEntry):
     def is_due(self):
         logger.info(f"Is {self.source} due to refresh ?")
 
+        # Refresh from db to update refresh time
+        self.source.refresh_from_db()
+
         if self.source.refresh > 0:
             next_run = self.last_run_at + timedelta(minutes=self.source.refresh)
             logger.debug(
@@ -82,7 +85,7 @@ class GeosourceScheduler(Scheduler):
 
     @property
     def schedule(self):
-        if self.should_sync():
+        if self.should_sync() or not getattr(self, "_schedule", None):
             logger.debug("Resync schedule entries")
             self.sync()
             self._schedule = self.all_entries()
