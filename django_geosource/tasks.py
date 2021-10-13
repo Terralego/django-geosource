@@ -29,7 +29,10 @@ def run_model_object_method(self, app, model, pk, method, success_state=states.S
 
     try:
         obj = Model.objects.get(pk=pk)
+
+        logger.info(f"Call method {method} on {obj}")
         state = {"action": method, **getattr(obj, method)()}
+        logger.info(f"Method {method} on {obj} ended")
 
         self.update_state(state=success_state, meta=state)
 

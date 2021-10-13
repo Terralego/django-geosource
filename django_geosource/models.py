@@ -1,4 +1,6 @@
 import json
+import sys
+from io import BytesIO
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum, auto
 
@@ -6,6 +8,7 @@ import fiona
 import psycopg2
 import pyexcel
 from celery.result import AsyncResult
+from celery.utils.log import LoggingProxy
 from django.conf import settings
 from django.contrib.gis.gdal.error import GDALException
 from django.contrib.gis.geos import GEOSGeometry
@@ -400,6 +403,18 @@ class CommandSource(Source):
     def refresh_data(self):
         layer = self.get_layer()
         begin_date = datetime.now()
+
+        try:
+            # wheter we are in a celery task ?
+            if isinstance(sys.stdout, LoggingProxy):
+                # Hack to be able to launch command with mondrian logging
+                sys.stdout.buffer = BytesIO()
+                sys.stdout.encoding = None
+                sys.stderr.buffer = BytesIO()
+                sys.stderr.encoding = None
+        except AttributeError:
+            pass
+
         call_command(self.command)
 
         self.clear_features(layer, begin_date)
