@@ -1,4 +1,9 @@
 
+0.5.1 / 2021-10-13
+==================
+
+  * Add hack to handle mondrian exception with logging proxy
+
 0.5.0 / 2021-09-14
 ==================
 
