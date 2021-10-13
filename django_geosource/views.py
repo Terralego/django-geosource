@@ -41,7 +41,9 @@ class SourceModelViewset(ModelViewSet):
 
         source = self.get_object()
 
-        refresh_job = source.run_async_method("refresh_data")
+        force_refresh = request.query_params.get("force")
+
+        refresh_job = source.run_async_method("refresh_data", force=force_refresh)
         if refresh_job:
             return Response(data=source.get_status(), status=status.HTTP_202_ACCEPTED)
 
