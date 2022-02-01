@@ -331,14 +331,10 @@ class WMTSSourceSerialize(SourceSerializer):
             .replace("{x}", "1")
         )
         try:
-            r = requests.get(url)
+            requests.get(url)
         except requests.ConnectionError:
             raise ValidationError("Can't reach specified tile server. Check your url.")
 
-        if not r.status_code == 200:
-            raise ValidationError(
-                f"The tile server response is invalid (status code = {r.status_code})."
-            )
         return super().validate(data)
 
 
