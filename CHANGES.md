@@ -1,3 +1,7 @@
+0.5.2 / 2022-02-02
+==================
+
+  * Simplify wmts source serializer validation
 
 0.5.1 / 2021-10-13
 ==================
