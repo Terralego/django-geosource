@@ -148,4 +148,4 @@ GEOSOURCE_CLEAN_FEATURE_CALLBACK = "django_geosource.geostore_callbacks.clear_fe
 GEOSOURCE_DELETE_LAYER_CALLBACK = "django_geosource.geostore_callbacks.delete_layer"
 
 CELERY_TASK_ALWAYS_EAGER = True
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
