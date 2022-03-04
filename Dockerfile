@@ -1,4 +1,4 @@
-FROM makinacorpus/geodjango:bionic-3.7
+FROM makinacorpus/geodjango:bionic-3.6
 
 RUN mkdir -p /code/src
 COPY . /code/src
