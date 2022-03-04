@@ -38,15 +38,21 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
-        python-version: ["3.6", "3.9"]
-        django-version: [2.2.*, 3.2.*]
+        python-version: ["3.6", "3.8"]
+        django-version: ["2.2.*", "3.2.*"]
         experimental: [false]
         include:
-          - django-version: dev
-            python-version: 3.6
+          - django-version: "2.2.*"
+            python-version: "3.9"
             experimental: true
-          - django-version: dev
-            python-version: 3.9
+          - django-version: "3.2.*"
+            python-version: "3.9"
+            experimental: true
+          - django-version:  "4.0.*"
+            python-version: "3.8"
+            experimental: true
+          - django-version: "4.0.*"
+            python-version: "3.9"
             experimental: true
     services:
       postgres:
@@ -76,6 +82,9 @@ jobs:
       - name: Fix bug https://github.com/psycopg/psycopg2/issues/1293#issuecomment-862835147
         run: |
           pip install psycopg2==2.8.6
+      - name: Check migrations
+        run: |
+          python manage.py makemigrations --check
       - name: Test with coverage
         run: |
           coverage run ./manage.py test

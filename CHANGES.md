@@ -1,7 +1,12 @@
+0.5.2+dev (XXXX-XX-XX)
+======================
+
+  * Add missing migrations
+
 0.5.2 / 2022-02-02
 ==================
 
-  * Simplify wmts source serializer validation
+  * Simplify WMTS source serializer validation
 
 0.5.1 / 2021-10-13
 ==================

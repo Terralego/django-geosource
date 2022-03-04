@@ -19,7 +19,6 @@ except ImportError:  # TODO Remove when dropping Django releases < 3.1
     from django.contrib.postgres.fields import JSONField
 
 from django.core.management import call_command
-from django.core.validators import RegexValidator, URLValidator
 from django.db import models, transaction
 from django.utils.text import slugify
 from django.utils import timezone
@@ -41,10 +40,6 @@ DEC2FLOAT = psycopg2.extensions.new_type(
     lambda value, curs: float(value) if value is not None else None,
 )
 psycopg2.extensions.register_type(DEC2FLOAT)
-
-HOST_REGEX = (
-    rf"(?:{URLValidator.ipv4_re}|{URLValidator.ipv6_re}|{URLValidator.host_re})"
-)
 
 
 class FieldTypes(Enum):
@@ -285,7 +280,6 @@ class Field(models.Model):
 class PostGISSource(Source):
     db_host = models.CharField(
         max_length=255,
-        validators=[RegexValidator(regex=HOST_REGEX)],
     )
     db_port = models.IntegerField(default=5432)
     db_username = models.CharField(max_length=63)
