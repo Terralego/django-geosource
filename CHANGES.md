@@ -1,5 +1,8 @@
-0.5.2+dev (XXXX-XX-XX)
-======================
+
+0.5.3 / 2022-03-04
+==================
+
+  * add ci job to check pending migrations (#42)
 
   * Add missing migrations
 
