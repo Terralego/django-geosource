@@ -7,28 +7,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_geosource', '0021_source_last_refresh'),
+        ("django_geosource", "0021_source_last_refresh"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='field',
-            name='sample',
+            model_name="field",
+            name="sample",
             field=models.JSONField(default=list),
         ),
         migrations.AlterField(
-            model_name='postgissource',
-            name='db_host',
-            field=models.CharField(max_length=255, validators=[django.core.validators.RegexValidator(regex='(?:(?:0|25[0-5]|2[0-4]\\d|1\\d?\\d?|[1-9]\\d?)(?:\\.(?:0|25[0-5]|2[0-4]\\d|1\\d?\\d?|[1-9]\\d?)){3}|\\[[0-9a-f:.]+\\]|([a-z¡-\uffff0-9](?:[a-z¡-\uffff0-9-]{0,61}[a-z¡-\uffff0-9])?(?:\\.(?!-)[a-z¡-\uffff0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z¡-\uffff-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))')]),
+            model_name="postgissource",
+            name="db_host",
+            field=models.CharField(
+                max_length=255,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        regex="(?:(?:0|25[0-5]|2[0-4]\\d|1\\d?\\d?|[1-9]\\d?)(?:\\.(?:0|25[0-5]|2[0-4]\\d|1\\d?\\d?|[1-9]\\d?)){3}|\\[[0-9a-f:.]+\\]|([a-z¡-\uffff0-9](?:[a-z¡-\uffff0-9-]{0,61}[a-z¡-\uffff0-9])?(?:\\.(?!-)[a-z¡-\uffff0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z¡-\uffff-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))"
+                    )
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='source',
-            name='report',
+            model_name="source",
+            name="report",
             field=models.JSONField(default=dict),
         ),
         migrations.AlterField(
-            model_name='source',
-            name='settings',
+            model_name="source",
+            name="settings",
             field=models.JSONField(default=dict),
         ),
     ]
