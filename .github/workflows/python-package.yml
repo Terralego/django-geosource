@@ -76,6 +76,9 @@ jobs:
       - name: Fix bug https://github.com/psycopg/psycopg2/issues/1293#issuecomment-862835147
         run: |
           pip install psycopg2==2.8.6
+      - name: Check migrations
+        run: |
+          python manage.py makemigrations --check
       - name: Test with coverage
         run: |
           coverage run ./manage.py test
