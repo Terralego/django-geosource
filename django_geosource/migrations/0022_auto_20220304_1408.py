@@ -3,6 +3,11 @@
 import django.core.validators
 from django.db import migrations, models
 
+try:
+    from django.db.models import JSONField
+except ImportError:  # TODO Remove when dropping Django releases < 3.1
+    from django.contrib.postgres.fields import JSONField
+
 
 class Migration(migrations.Migration):
 
@@ -14,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="field",
             name="sample",
-            field=models.JSONField(default=list),
+            field=JSONField(default=list),
         ),
         migrations.AlterField(
             model_name="postgissource",
@@ -31,11 +36,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="source",
             name="report",
-            field=models.JSONField(default=dict),
+            field=JSONField(default=dict),
         ),
         migrations.AlterField(
             model_name="source",
             name="settings",
-            field=models.JSONField(default=dict),
+            field=JSONField(default=dict),
         ),
     ]
